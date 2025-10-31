@@ -5,7 +5,7 @@ import {
   signInWithEmailAndPassword as firebaseSignIn,
   signOut as firebaseSignOut,
   onAuthStateChanged as firebaseOnAuthStateChanged,
-  sendEmailVerification as firebaseSendEmailVerification
+  // removed: sendEmailVerification (we no longer send verification emails)
 } from 'firebase/auth'
 
 const AuthContext = createContext(null)
@@ -31,6 +31,17 @@ export function AuthProvider({ children }) {
   const signup = (email, password) => {
     if (!firebaseConfigured) return Promise.reject(new Error('Firebase not configured'))
     return firebaseCreateUser(auth, email, password)
+      .then((userCredential) => {
+        // After successful signup, trigger a welcome email.
+        // This attempts to call a server-side endpoint at /api/send-welcome (not provided here).
+        // If you don't have a backend, the function will silently fall back and the signup still succeeds.
+        const userEmail = userCredential?.user?.email
+        const userName = userCredential?.user?.displayName || null
+        sendWelcomeEmail(userEmail, userName).catch(() => {
+          // swallow errors so signup isn't blocked by email sending
+        })
+        return userCredential
+      })
   }
   const login = (email, password) => {
     if (!firebaseConfigured) return Promise.reject(new Error('Firebase not configured'))
@@ -40,21 +51,30 @@ export function AuthProvider({ children }) {
     if (!firebaseConfigured) return Promise.reject(new Error('Firebase not configured'))
     return firebaseSignOut(auth)
   }
-  // sendVerification optionally accepts a continueUrl so the verification link redirects back to the app
-  const sendVerification = (continueUrl) => {
-    if (!firebaseConfigured) return Promise.reject(new Error('Firebase not configured'))
-    if (!auth.currentUser) return Promise.reject(new Error('No user'))
-    const actionCodeSettings = {
-      url: continueUrl || (typeof window !== 'undefined' ? window.location.origin : ''),
-      // If you want the code to be handled in the app, set handleCodeInApp: true and configure
-      // the client to intercept the link; for simple redirect set false.
-      handleCodeInApp: false
+  // sendWelcomeEmail: attempt to notify the user that they are registered.
+  // This is a lightweight client-side helper that POSTs to `/api/send-welcome` if present.
+  // Implement the server-side handler (SendGrid, Mailgun, etc.) to actually send the email.
+  const sendWelcomeEmail = async (email, displayName) => {
+    if (!email) return Promise.reject(new Error('No email provided'))
+    // Try calling a backend endpoint. If none exists, resolve without throwing.
+    try {
+      const resp = await fetch('/api/send-welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, displayName })
+      })
+      if (!resp.ok) {
+        // log and continue
+        console.warn('sendWelcomeEmail: backend responded with', resp.status)
+      }
+    } catch (err) {
+      // No backend available or network error — that's fine for now.
+      console.warn('sendWelcomeEmail: no backend available to send welcome email', err)
     }
-    return firebaseSendEmailVerification(auth.currentUser, actionCodeSettings)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signup, login, logout, sendVerification }}>
+    <AuthContext.Provider value={{ user, loading, signup, login, logout, sendWelcomeEmail }}>
       {children}
     </AuthContext.Provider>
   )

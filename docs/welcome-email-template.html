@@ -1,0 +1,28 @@
+<!-- Welcome email template
+ - Copy this HTML into your email sending service (SendGrid, Mailgun, SMTP, etc.)
+ - This is NOT a Firebase Auth built-in template; Firebase Auth doesn't provide a "welcome" transactional email type.
+ - Use a server-side function (Cloud Function / Netlify Function / server) to send this email after user creation.
+-->
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bienvenue sur Comptability Baby</title>
+    <style>
+      body { font-family: Arial, Helvetica, sans-serif; color: #111; }
+      .container { max-width: 600px; margin: 0 auto; padding: 24px; }
+      .brand { color: #2563eb; font-weight: 700 }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <p>Bonjour %DISPLAY_NAME%,</p>
+      <p>Merci de vous être inscrit·e sur <span class="brand">Comptability Baby</span> — votre compte a bien été créé.</p>
+      <p>Vous pouvez désormais vous connecter et commencer à gérer vos revenus et dépenses.</p>
+      <p>Si vous n'avez pas créé ce compte, merci d'ignorer ce message ou de nous contacter.</p>
+      <p>À bientôt,<br/>L'équipe Comptability Baby</p>
+    </div>
+  </body>
+</html>
