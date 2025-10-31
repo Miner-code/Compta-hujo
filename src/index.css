@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* container tweaks */
+.max-w-5xl { max-width: 78rem; }
+
+/* small utility */
+.shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
