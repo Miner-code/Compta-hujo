@@ -6,10 +6,10 @@ function formatDateInput(date) {
   return date.slice(0,10)
 }
 
-export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove }) {
+export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, categories = [], onAddCategory }) {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('Other')
+  const [category, setCategory] = useState(categories && categories.length ? categories[0] : 'Other')
   const [date, setDate] = useState('')
   const [recurring, setRecurring] = useState(false)
 
@@ -75,15 +75,12 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove }) {
         </div>
         <div>
           <label className="text-sm text-gray-600">Category</label>
-          <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
-            <option>Rent</option>
-            <option>Groceries</option>
-            <option>Transport</option>
-            <option>Utilities</option>
-            <option>Entertainment</option>
-            <option>Subscriptions</option>
-            <option>Other</option>
-          </select>
+          <div className="flex gap-2">
+            <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
+              {categories && categories.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <CategoryCreator onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} />
+          </div>
         </div>
         <div>
           <label className="text-sm text-gray-600">Amount</label>
@@ -115,13 +112,7 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove }) {
                 <div>
                   <label className="text-xs text-gray-600">Category</label>
                   <select value={editFields.category} onChange={ev => setEditFields(f => ({ ...f, category: ev.target.value }))} className="w-full border rounded px-2 py-1">
-                    <option>Rent</option>
-                    <option>Groceries</option>
-                    <option>Transport</option>
-                    <option>Utilities</option>
-                    <option>Entertainment</option>
-                    <option>Subscriptions</option>
-                    <option>Other</option>
+                    {categories && categories.map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
@@ -166,5 +157,26 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove }) {
         ))}
       </ul>
     </div>
+  )
+}
+
+function CategoryCreator({ onAddCategory }) {
+  const [open, setOpen] = React.useState(false)
+  const [val, setVal] = React.useState('')
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (!val) return
+    onAddCategory && onAddCategory(val)
+    setVal('')
+    setOpen(false)
+  }
+
+  if (!open) return <button type="button" onClick={() => setOpen(true)} className="bg-gray-100 px-2 py-1 rounded">+</button>
+  return (
+    <form onSubmit={submit} className="flex gap-2">
+      <input value={val} onChange={e => setVal(e.target.value)} placeholder="New category" className="border rounded px-2 py-1" />
+      <button className="bg-blue-600 text-white px-2 py-1 rounded">Add</button>
+    </form>
   )
 }

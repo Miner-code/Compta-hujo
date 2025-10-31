@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove }) {
+export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categories = [], onAddCategory }) {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
+  const [category, setCategory] = useState(categories && categories.length ? categories[0] : '')
   const [date, setDate] = useState('')
   const [recurring, setRecurring] = useState(false)
 
@@ -14,6 +15,7 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove }) {
     const newIncome = {
       id: uuidv4(),
       name,
+      category,
       amount: amt,
       date: date ? new Date(date).toISOString() : null,
       recurring
@@ -32,6 +34,15 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove }) {
         <div className="md:col-span-1">
           <label className="text-sm text-gray-600">Name</label>
           <input value={name} onChange={e => setName(e.target.value)} className="w-full border rounded px-2 py-1" placeholder="Secondary salary, Sale..." />
+        </div>
+        <div>
+          <label className="text-sm text-gray-600">Category</label>
+          <div className="flex gap-2">
+            <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
+              {categories && categories.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <CategoryCreator onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} />
+          </div>
         </div>
         <div>
           <label className="text-sm text-gray-600">Amount</label>
@@ -74,3 +85,24 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove }) {
     </div>
   )
 }
+
+    function CategoryCreator({ onAddCategory }) {
+      const [open, setOpen] = React.useState(false)
+      const [val, setVal] = React.useState('')
+
+      const submit = (e) => {
+        e.preventDefault()
+        if (!val) return
+        onAddCategory && onAddCategory(val)
+        setVal('')
+        setOpen(false)
+      }
+
+      if (!open) return <button type="button" onClick={() => setOpen(true)} className="bg-gray-100 px-2 py-1 rounded">+</button>
+      return (
+        <form onSubmit={submit} className="flex gap-2">
+          <input value={val} onChange={e => setVal(e.target.value)} placeholder="New category" className="border rounded px-2 py-1" />
+          <button className="bg-blue-600 text-white px-2 py-1 rounded">Add</button>
+        </form>
+      )
+    }

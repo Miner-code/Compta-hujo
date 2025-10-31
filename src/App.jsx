@@ -80,6 +80,16 @@ function InnerApp() {
     return raw && raw.expenses && raw.incomes ? raw : { expenses: {}, incomes: {} }
   })
 
+  // categories (persisted)
+  const [categories, setCategories] = useState(() => {
+    const raw = loadState(STORAGE_KEY + ':categories')
+    return Array.isArray(raw) && raw.length ? raw : ['Rent','Groceries','Transport','Utilities','Entertainment','Subscriptions','Other']
+  })
+
+  useEffect(() => {
+    saveState(STORAGE_KEY + ':categories', categories)
+  }, [categories])
+
   useEffect(() => {
     saveState(STORAGE_KEY + ':monthly', monthly)
   }, [monthly])
@@ -158,11 +168,13 @@ function InnerApp() {
           <div className="md:col-span-1">
             <SalaryInput salary={state.salary} onSave={setSalary} />
             <Incomes
-              incomes={state.incomes}
-              onAdd={addIncome}
-              onUpdate={updateIncome}
-              onRemove={removeIncome}
-            />
+                incomes={state.incomes}
+                onAdd={addIncome}
+                onUpdate={updateIncome}
+                onRemove={removeIncome}
+                categories={categories}
+                onAddCategory={(c) => setCategories(cs => Array.from(new Set([...(cs||[]), c])))}
+              />
           </div>
 
           <div className="md:col-span-2">
@@ -171,6 +183,8 @@ function InnerApp() {
               onAdd={addExpense}
               onUpdate={updateExpense}
               onRemove={removeExpense}
+              categories={categories}
+              onAddCategory={(c) => setCategories(cs => Array.from(new Set([...(cs||[]), c])))}
             />
           </div>
         </section>
