@@ -12,6 +12,8 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
   const [category, setCategory] = useState(categories && categories.length ? categories[0] : 'Other')
   const [date, setDate] = useState('')
   const [recurring, setRecurring] = useState(false)
+  const [recurringStart, setRecurringStart] = useState('')
+  const [recurringEnd, setRecurringEnd] = useState('')
 
   // Editing state for existing expenses
   const [editingId, setEditingId] = useState(null)
@@ -27,13 +29,17 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
       category,
       amount: amt,
       date: date ? new Date(date).toISOString() : null,
-      recurring
+      recurring,
+      recurringStart: recurringStart ? new Date(recurringStart).toISOString() : null,
+      recurringEnd: recurringEnd ? new Date(recurringEnd).toISOString() : null
     }
     onAdd(newExpense)
     setName('')
     setAmount('')
     setDate('')
     setRecurring(false)
+    setRecurringStart('')
+    setRecurringEnd('')
   }
 
   const startEdit = (exp) => {
@@ -43,7 +49,9 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
       amount: exp.amount != null ? String(exp.amount) : '',
       category: exp.category || 'Other',
       date: exp.date ? formatDateInput(exp.date) : '',
-      recurring: !!exp.recurring
+      recurring: !!exp.recurring,
+      recurringStart: exp.recurringStart ? formatDateInput(exp.recurringStart) : '',
+      recurringEnd: exp.recurringEnd ? formatDateInput(exp.recurringEnd) : ''
     })
   }
 
@@ -59,7 +67,9 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
       category: editFields.category,
       amount: amt,
       date: editFields.date ? new Date(editFields.date).toISOString() : null,
-      recurring: !!editFields.recurring
+      recurring: !!editFields.recurring,
+      recurringStart: editFields.recurringStart ? new Date(editFields.recurringStart).toISOString() : null,
+      recurringEnd: editFields.recurringEnd ? new Date(editFields.recurringEnd).toISOString() : null
     }
     onUpdate(id, patch)
     cancelEdit()
@@ -95,6 +105,14 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
             <input type="checkbox" checked={recurring} onChange={e => setRecurring(e.target.checked)} />
             Recurring expense (monthly)
           </label>
+          {recurring && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Start</label>
+              <input type="date" value={recurringStart} onChange={e => setRecurringStart(e.target.value)} className="border rounded px-2 py-1" />
+              <label className="text-sm text-gray-600">End</label>
+              <input type="date" value={recurringEnd} onChange={e => setRecurringEnd(e.target.value)} className="border rounded px-2 py-1" />
+            </div>
+          )}
           <button className="ml-auto bg-green-600 text-white px-4 py-2 rounded">Add</button>
         </div>
       </form>
@@ -129,6 +147,18 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
                     <input type="checkbox" checked={!!editFields.recurring} onChange={ev => setEditFields(f => ({ ...f, recurring: ev.target.checked }))} />
                   </div>
                 </div>
+                {editFields.recurring && (
+                  <div className="md:col-span-4 flex gap-2 mt-2">
+                    <div>
+                      <label className="text-xs text-gray-600">Start</label>
+                      <input value={editFields.recurringStart} onChange={ev => setEditFields(f => ({ ...f, recurringStart: ev.target.value }))} type="date" className="border rounded px-2 py-1" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600">End</label>
+                      <input value={editFields.recurringEnd} onChange={ev => setEditFields(f => ({ ...f, recurringEnd: ev.target.value }))} type="date" className="border rounded px-2 py-1" />
+                    </div>
+                  </div>
+                )}
                 <div className="md:col-span-4 flex gap-2 mt-2">
                   <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={() => saveEdit(e.id)}>Save</button>
                   <button className="bg-gray-200 px-3 py-1 rounded" onClick={cancelEdit}>Cancel</button>

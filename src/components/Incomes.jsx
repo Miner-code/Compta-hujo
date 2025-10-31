@@ -7,6 +7,8 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
   const [category, setCategory] = useState(categories && categories.length ? categories[0] : '')
   const [date, setDate] = useState('')
   const [recurring, setRecurring] = useState(false)
+  const [recurringStart, setRecurringStart] = useState('')
+  const [recurringEnd, setRecurringEnd] = useState('')
 
   const handleAdd = (e) => {
     e.preventDefault()
@@ -18,13 +20,17 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
       category,
       amount: amt,
       date: date ? new Date(date).toISOString() : null,
-      recurring
+      recurring,
+      recurringStart: recurringStart ? new Date(recurringStart).toISOString() : null,
+      recurringEnd: recurringEnd ? new Date(recurringEnd).toISOString() : null
     }
     onAdd(newIncome)
     setName('')
     setAmount('')
     setDate('')
     setRecurring(false)
+    setRecurringStart('')
+    setRecurringEnd('')
   }
 
   return (
@@ -44,10 +50,10 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
             <CategoryCreator onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} />
           </div>
         </div>
-        <div>
-          <label className="text-sm text-gray-600">Amount</label>
-          <input value={amount} onChange={e => setAmount(e.target.value)} type="number" step="0.01" className="w-full border rounded px-2 py-1" placeholder="€" />
-        </div>
+          <div>
+            <label className="text-sm text-gray-600">Amount</label>
+            <input value={amount} onChange={e => setAmount(e.target.value)} type="number" step="0.01" className="w-full border rounded px-2 py-1" placeholder="€" />
+          </div>
         <div>
           <label className="text-sm text-gray-600">Date (optional)</label>
           <input value={date} onChange={e => setDate(e.target.value)} type="date" className="w-full border rounded px-2 py-1" />
@@ -57,6 +63,14 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
             <input type="checkbox" checked={recurring} onChange={e => setRecurring(e.target.checked)} />
             Recurring (monthly)
           </label>
+          {recurring && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">Start</label>
+              <input type="date" value={recurringStart} onChange={e => setRecurringStart(e.target.value)} className="border rounded px-2 py-1" />
+              <label className="text-sm text-gray-600">End</label>
+              <input type="date" value={recurringEnd} onChange={e => setRecurringEnd(e.target.value)} className="border rounded px-2 py-1" />
+            </div>
+          )}
           <button className="ml-auto bg-green-600 text-white px-4 py-2 rounded">Add</button>
         </div>
       </form>

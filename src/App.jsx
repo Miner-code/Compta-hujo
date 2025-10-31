@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import Header from './components/Header'
+import CategoriesManager from './components/CategoriesManager'
 import SalaryInput from './components/SalaryInput'
 import Expenses from './components/Expenses'
 import Incomes from './components/Incomes'
@@ -89,6 +90,54 @@ function InnerApp() {
   useEffect(() => {
     saveState(STORAGE_KEY + ':categories', categories)
   }, [categories])
+
+  // categories manager modal
+  const [showCategoriesManager, setShowCategoriesManager] = useState(false)
+
+  const renameCategory = (oldName, newName) => {
+    if (!oldName || !newName || oldName === newName) return
+    setCategories(cs => cs.map(c => (c === oldName ? newName : c)))
+    // update existing entries in main state
+    setState(s => ({
+      ...s,
+      expenses: (s.expenses || []).map(e => e.category === oldName ? { ...e, category: newName } : e),
+      incomes: (s.incomes || []).map(i => i.category === oldName ? { ...i, category: newName } : i)
+    }))
+    // update monthly buckets
+    setMonthly(m => {
+      const upd = { expenses: {}, incomes: {} }
+      for (const k of Object.keys(m.expenses || {})) {
+        upd.expenses[k] = (m.expenses[k] || []).map(e => e.category === oldName ? { ...e, category: newName } : e)
+      }
+      for (const k of Object.keys(m.incomes || {})) {
+        upd.incomes[k] = (m.incomes[k] || []).map(i => i.category === oldName ? { ...i, category: newName } : i)
+      }
+      return upd
+    })
+  }
+
+  const deleteCategory = (oldName, replacement) => {
+    if (!oldName) return
+    setCategories(cs => (cs || []).filter(c => c !== oldName))
+    if (replacement) {
+      // replace in state entries
+      setState(s => ({
+        ...s,
+        expenses: (s.expenses || []).map(e => e.category === oldName ? { ...e, category: replacement } : e),
+        incomes: (s.incomes || []).map(i => i.category === oldName ? { ...i, category: replacement } : i)
+      }))
+      setMonthly(m => {
+        const upd = { expenses: {}, incomes: {} }
+        for (const k of Object.keys(m.expenses || {})) {
+          upd.expenses[k] = (m.expenses[k] || []).map(e => e.category === oldName ? { ...e, category: replacement } : e)
+        }
+        for (const k of Object.keys(m.incomes || {})) {
+          upd.incomes[k] = (m.incomes[k] || []).map(i => i.category === oldName ? { ...i, category: replacement } : i)
+        }
+        return upd
+      })
+    }
+  }
 
   useEffect(() => {
     saveState(STORAGE_KEY + ':monthly', monthly)
