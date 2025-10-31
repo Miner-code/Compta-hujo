@@ -22,7 +22,7 @@ export default function App() {
 }
 
 function InnerApp() {
-  const { user, loading, logout, sendVerification } = useAuth()
+  const { user, loading, logout } = useAuth()
   // Agenda view state: month/year currently viewed and selected date (ISO yyyy-mm-dd)
   const today = new Date()
   const [agendaView, setAgendaView] = useState({ year: today.getFullYear(), month: today.getMonth(), selectedDate: null })
@@ -142,71 +142,8 @@ function InnerApp() {
   const updateIncome = (id, patch) => setState(s => ({ ...s, incomes: (Array.isArray(s.incomes) ? s.incomes : []).map(i => i.id === id ? { ...i, ...patch } : i) }))
   const removeIncome = (id) => setState(s => ({ ...s, incomes: (Array.isArray(s.incomes) ? s.incomes : []).filter(i => i.id !== id) }))
 
-  // cooldown for resend verification
-  const [cooldown, setCooldown] = useState(0)
-  const cooldownRef = useRef(null)
-
-  useEffect(() => {
-    return () => {
-      if (cooldownRef.current) clearInterval(cooldownRef.current)
-    }
-  }, [])
-
-  const startCooldown = (seconds = 60) => {
-    setCooldown(seconds)
-    if (cooldownRef.current) clearInterval(cooldownRef.current)
-    cooldownRef.current = setInterval(() => {
-      setCooldown(s => {
-        if (s <= 1) {
-          clearInterval(cooldownRef.current)
-          cooldownRef.current = null
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-  }
-
-  const handleResend = async () => {
-    try {
-      await sendVerification(window.location.origin)
-      startCooldown(60)
-      alert('Verification email resent — check your inbox and spam folder.')
-    } catch (err) {
-      console.error('sendVerification error', err)
-      alert('Error sending verification: ' + (err.message || err))
-    }
-  }
-
-  const handleChecked = async () => {
-    try {
-      if (auth && auth.currentUser) await auth.currentUser.reload()
-    } catch (e) {
-      console.error('Error reloading user', e)
-    }
-    window.location.reload()
-  }
-
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   if (!user) return <AuthPage />
-  if (user && !user.emailVerified) {
-    // verification UI (resend handled by parent handlers)
-    
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-6 rounded shadow max-w-lg text-center">
-          <h2 className="text-lg font-semibold mb-2">Verify your email</h2>
-          <p className="text-sm text-gray-600 mb-2">We sent a verification email to <strong>{user.email}</strong>. Please check your inbox and your spam folder, and follow the link.</p>
-          <p className="text-xs text-gray-400 mb-4">If the link doesn't return you to the app, make sure the domain <code>{window.location.origin}</code> is added to Firebase Authorized domains (Firebase Console → Authentication → Settings).</p>
-          <div className="flex gap-2 justify-center">
-            <button className={`px-4 py-2 rounded ${cooldown ? 'bg-gray-300 text-gray-600' : 'bg-blue-600 text-white'}`} onClick={handleResend} disabled={cooldown > 0}>{cooldown > 0 ? `Resend (${cooldown}s)` : 'Resend verification'}</button>
-            <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={handleChecked}>I've verified — refresh</button>
-            <button className="bg-gray-200 px-4 py-2 rounded" onClick={() => logout()}>Logout</button>
-          </div>
-        </div>
-      </div>
-    )
-  }
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <Header />

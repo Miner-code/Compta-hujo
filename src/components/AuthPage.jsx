@@ -68,7 +68,7 @@ function LoginForm() {
 }
 
 function SignupForm() {
-  const { signup, sendVerification } = useAuth()
+  const { signup } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
@@ -79,9 +79,8 @@ function SignupForm() {
     setError(null)
     try {
       const cred = await signup(email, password)
-      // send verification
-      await sendVerification()
-      setOk('Account created. A verification email was sent — check your inbox.')
+      // Signup succeeds and the user is signed in by Firebase automatically.
+      setOk('Compte créé — vous êtes connecté·e.')
     } catch (err) {
       setError(err.message)
     }
