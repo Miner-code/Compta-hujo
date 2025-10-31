@@ -1,0 +1,39 @@
+<!-- Verify Email Template for Firebase
+  - Copy the HTML below into Firebase Console > Authentication > Templates > Email Address Verification
+  - IMPORTANT: Keep the placeholder %LINK% exactly as-is. Firebase will replace it with the action link (containing oobCode).
+  - Optional placeholders: %DISPLAY_NAME%, %APP_NAME%
+  - Example usage: set actionCodeSettings.url to https://your-domain/verify-email and handleCodeInApp=true if you want the app to handle the oobCode.
+-->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verify your email</title>
+    <style>
+      /* Keep styles simple for email clients */
+      body { font-family: Arial, Helvetica, sans-serif; color: #111; }
+      .container { max-width: 600px; margin: 0 auto; padding: 24px; }
+      a.button { display: inline-block; padding: 12px 18px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <p>Hello %DISPLAY_NAME%,</p>
+      <p>Follow this link to verify your email address:</p>
+
+      <p>
+        <!-- Keep %LINK% exactly as provided by Firebase -->
+        <a class="button" href="%LINK%">Verify your email</a>
+      </p>
+
+      <p>If the button doesn't work, copy and paste the following link into your browser:</p>
+      <p><a href="%LINK%">%LINK%</a></p>
+
+      <p>If you didn’t ask to verify this address, you can ignore this email.</p>
+
+      <p>Thanks,<br/>Your %APP_NAME% team</p>
+    </div>
+  </body>
+</html>
