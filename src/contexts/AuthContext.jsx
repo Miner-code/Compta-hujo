@@ -56,21 +56,28 @@ export function AuthProvider({ children }) {
   // Implement the server-side handler (SendGrid, Mailgun, etc.) to actually send the email.
   const sendWelcomeEmail = async (email, displayName) => {
     if (!email) return Promise.reject(new Error('No email provided'))
-    // Try calling a backend endpoint. If none exists, resolve without throwing.
-    try {
-      const resp = await fetch('/api/send-welcome', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, displayName })
-      })
-      if (!resp.ok) {
-        // log and continue
-        console.warn('sendWelcomeEmail: backend responded with', resp.status)
+    // Try calling a backend endpoint. First try /api/send-welcome (common mapping),
+    // then fallback to /.netlify/functions/send-welcome (Netlify default) if first fails.
+    const payload = { email, displayName }
+    const tryPaths = ['/api/send-welcome', '/.netlify/functions/send-welcome']
+    for (const path of tryPaths) {
+      try {
+        const resp = await fetch(path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        if (resp.ok) return
+        // If 404, try next path; otherwise log and continue
+        if (resp.status === 404) continue
+        console.warn('sendWelcomeEmail: backend responded with', resp.status, 'for', path)
+      } catch (err) {
+        // network error, try next path
+        console.warn('sendWelcomeEmail: request failed for', path, err)
+        continue
       }
-    } catch (err) {
-      // No backend available or network error — that's fine for now.
-      console.warn('sendWelcomeEmail: no backend available to send welcome email', err)
     }
+    // If we reach here, none of the endpoints succeeded — swallow error.
   }
 
   return (
