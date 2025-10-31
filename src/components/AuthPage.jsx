@@ -40,11 +40,25 @@ function LoginForm() {
       {error && <div className="text-sm text-red-600">{error}</div>}
       <div>
         <label className="text-sm text-gray-600">Email</label>
-        <input value={email} onChange={e => setEmail(e.target.value)} className="w-full border rounded px-2 py-1" type="email" />
+        <input
+          name="email"
+          autoComplete="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          className="w-full border rounded px-2 py-1"
+          type="email"
+        />
       </div>
       <div>
         <label className="text-sm text-gray-600">Password</label>
-        <input value={password} onChange={e => setPassword(e.target.value)} className="w-full border rounded px-2 py-1" type="password" />
+        <input
+          name="current-password"
+          autoComplete="current-password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          className="w-full border rounded px-2 py-1"
+          type="password"
+        />
       </div>
       <div className="flex justify-end">
         <button className="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
@@ -79,11 +93,25 @@ function SignupForm() {
       {ok && <div className="text-sm text-green-600">{ok}</div>}
       <div>
         <label className="text-sm text-gray-600">Email</label>
-        <input value={email} onChange={e => setEmail(e.target.value)} className="w-full border rounded px-2 py-1" type="email" />
+        <input
+          name="email"
+          autoComplete="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          className="w-full border rounded px-2 py-1"
+          type="email"
+        />
       </div>
       <div>
         <label className="text-sm text-gray-600">Password</label>
-        <input value={password} onChange={e => setPassword(e.target.value)} className="w-full border rounded px-2 py-1" type="password" />
+        <input
+          name="new-password"
+          autoComplete="new-password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          className="w-full border rounded px-2 py-1"
+          type="password"
+        />
       </div>
       <div className="flex justify-end">
         <button className="bg-green-600 text-white px-4 py-2 rounded">Sign up</button>
