@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { auth, firebaseConfigured, initFirebase } from '../firebase'
+import { auth, firebaseConfigured } from '../firebase'
 import {
   createUserWithEmailAndPassword as firebaseCreateUser,
   signInWithEmailAndPassword as firebaseSignIn,
@@ -15,23 +15,17 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let unsub = null
-    let mounted = true
-    ;(async () => {
-      await initFirebase()
-      if (!mounted) return
-      if (!firebaseConfigured) {
-        // No firebase configured: show logged-out state and stop loading
-        setUser(null)
-        setLoading(false)
-        return
-      }
-      unsub = firebaseOnAuthStateChanged(auth, (u) => {
-        setUser(u)
-        setLoading(false)
-      })
-    })()
-    return () => { mounted = false; if (unsub) unsub() }
+    if (!firebaseConfigured) {
+      // No firebase configured: show logged-out state and stop loading
+      setUser(null)
+      setLoading(false)
+      return
+    }
+    const unsub = firebaseOnAuthStateChanged(auth, (u) => {
+      setUser(u)
+      setLoading(false)
+    })
+    return () => unsub()
   }, [])
 
   const signup = (email, password) => {
