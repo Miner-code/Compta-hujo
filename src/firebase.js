@@ -2,26 +2,56 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+// Build-time config read from Vite envs (may be undefined in some deploy scenarios).
+let firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || null,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || null,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || null,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || null,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || null,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || null,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || null,
 }
 
-const isConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.authDomain && !!firebaseConfig.projectId
+export let app = null
+export let auth = null
+export let firebaseConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.authDomain && !!firebaseConfig.projectId
 
-let app = null
-let auth = null
-
-if (!isConfigured) {
-  // don't initialize Firebase if env vars are missing — avoid the cryptic runtime error
-  console.warn('Firebase not configured. Set VITE_FIREBASE_API_KEY and other VITE_FIREBASE_* env vars in a .env file. See README.md')
-} else {
-  app = initializeApp(firebaseConfig)
-  auth = getAuth(app)
+// initialize from existing config if present at build time
+if (firebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig)
+    auth = getAuth(app)
+  } catch (err) {
+    console.warn('Firebase initialization failed at build-time:', err)
+    app = null
+    auth = null
+    firebaseConfigured = false
+  }
 }
 
-export { app, auth, isConfigured as firebaseConfigured }
+// ensureFirebaseInitialized: runtime initializer that will fetch config from a server-side
+// endpoint (Netlify Function) when build-time env vars are not available or when we want
+// to avoid embedding secrets in the client bundle.
+export async function ensureFirebaseInitialized() {
+  if (firebaseConfigured) return true
+  try {
+    const resp = await fetch('/.netlify/functions/firebase-config')
+    if (!resp.ok) {
+      console.warn('Could not fetch runtime firebase config:', resp.status)
+      return false
+    }
+    const cfg = await resp.json()
+    if (!cfg || !cfg.apiKey) return false
+    firebaseConfig = cfg
+    app = initializeApp(firebaseConfig)
+    auth = getAuth(app)
+    firebaseConfigured = true
+    return true
+  } catch (err) {
+    console.warn('ensureFirebaseInitialized error', err)
+    return false
+  }
+}
+
+export default firebaseConfig
