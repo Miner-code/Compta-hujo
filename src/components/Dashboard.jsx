@@ -7,6 +7,41 @@ import ExpensePie from './ExpensePie'
 import { loadState, saveState } from '../utils/storage'
 import { v4 as uuidv4 } from 'uuid'
 
+function parseYMD(s) {
+  if (!s) return null
+  const str = String(s).slice(0,10)
+  const parts = str.split('-')
+  if (parts.length !== 3) return null
+  const y = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10)
+  const d = parseInt(parts[2], 10)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return null
+  return { y, m, d }
+}
+
+function formatDateKeyFromYMD(y,m,d) {
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+}
+
+function formatDateKey(d) {
+  if (!d) return null
+  if (d instanceof Date) return formatDateKeyFromYMD(d.getFullYear(), d.getMonth()+1, d.getDate())
+  const ymd = parseYMD(d)
+  if (ymd) return formatDateKeyFromYMD(ymd.y, ymd.m, ymd.d)
+  try {
+    const dt = new Date(d)
+    return formatDateKeyFromYMD(dt.getFullYear(), dt.getMonth()+1, dt.getDate())
+  } catch (e) { return null }
+}
+
+function parseDateToLocal(dateStr) {
+  if (!dateStr) return null
+  if (dateStr instanceof Date) return dateStr
+  const p = parseYMD(dateStr)
+  if (p) return new Date(p.y, p.m - 1, p.d)
+  return new Date(dateStr)
+}
+
 export default function Dashboard({ salary = 0, expenses = [], incomes = [] }) {
   const [includeFuture, setIncludeFuture] = useState(true)
   const totals = useMemo(() => computeMonthlyTotals(salary, expenses, incomes, { includeFuture }), [salary, expenses, incomes, includeFuture])
@@ -24,7 +59,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [] }) {
     const d = new Date()
     d.setMonth(d.getMonth() + 1)
     d.setDate(1)
-    return d.toISOString().slice(0,10)
+    return formatDateKey(d)
   })
   const [schedRecurrence, setSchedRecurrence] = useState('monthly')
 
@@ -283,7 +318,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [] }) {
                         <li key={s.id} className="flex items-center justify-between border rounded p-2">
                           <div>
                             <div className="font-medium">€{(Number(s.amount)||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} {s.recurrence === 'monthly' ? <span className="text-xs text-gray-500">/mo</span> : <span className="text-xs text-gray-500">one-off</span>}</div>
-                            <div className="text-xs text-gray-500">Date: {s.date ? new Date(s.date).toLocaleDateString() : '—'}</div>
+                                              <div className="text-xs text-gray-500">Date: {s.date ? parseDateToLocal(s.date).toLocaleDateString() : '—'}</div>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-xs text-gray-500">{s.risk}</div>

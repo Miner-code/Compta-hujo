@@ -19,10 +19,11 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
       name,
       category,
       amount: amt,
-      date: date ? new Date(date).toISOString() : null,
+      // store as date-only YYYY-MM-DD to avoid timezone issues
+      date: date ? date : null,
       recurring,
-      recurringStart: recurringStart ? new Date(recurringStart).toISOString() : null,
-      recurringEnd: recurringEnd ? new Date(recurringEnd).toISOString() : null
+      recurringStart: recurringStart ? recurringStart : null,
+      recurringEnd: recurringEnd ? recurringEnd : null
     }
     onAdd(newIncome)
     setName('')
@@ -81,7 +82,14 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
           <li key={i.id} className="flex items-center justify-between border rounded p-2">
             <div>
               <div className="font-medium">{i.name}</div>
-              <div className="text-xs text-gray-500">{i.recurring ? 'Recurring' : (i.date ? new Date(i.date).toLocaleDateString() : 'No date')}</div>
+              <div className="text-xs text-gray-500">{i.recurring ? 'Recurring' : (i.date ? (function(d){
+                if (!d) return 'No date'
+                if (d instanceof Date) return d.toLocaleDateString()
+                const s = String(d).slice(0,10)
+                const parts = s.split('-')
+                if (parts.length === 3) return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).toLocaleDateString()
+                return new Date(d).toLocaleDateString()
+              })(i.date) : 'No date')}</div>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 font-semibold text-green-600">

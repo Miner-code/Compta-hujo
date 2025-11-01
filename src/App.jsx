@@ -53,10 +53,10 @@ function InnerApp() {
       const remainingIncomes = (Array.isArray(s.incomes) ? s.incomes : []).filter(i => i.recurring || monthKeyForDate(i.date) !== prevKey)
 
       // merge prevMonthExpenses into monthly map
-      setMonthly(m => ({
-        expenses: { ...m.expenses, [prevKey]: [ ...(m.expenses[prevKey] || []), ...prevMonthExpenses ] },
-        incomes: { ...m.incomes, [prevKey]: [ ...(m.incomes[prevKey] || []), ...prevMonthIncomes ] }
-      }))
+        setMonthly(m => ({
+          expenses: { ...m.expenses, [prevKey]: [ ...(m.expenses[prevKey] || []), ...prevMonthExpenses ] },
+          incomes: { ...m.incomes, [prevKey]: [ ...(m.incomes[prevKey] || []), ...prevMonthIncomes ] }
+        }))
 
       // Now load new month's items from monthly map (we'll read latest monthly via closure in next set)
       return { ...s, expenses: remainingExpenses, incomes: remainingIncomes }
@@ -145,10 +145,15 @@ function InnerApp() {
 
   const monthKeyForDate = (isoDate) => {
     if (!isoDate) return null
-    try {
-      const d = new Date(isoDate)
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
-    } catch (e) { return null }
+    // isoDate is expected in YYYY-MM-DD or an ISO string. Safely parse YYYY-MM-DD without timezone shifts.
+    const s = String(isoDate).slice(0,10)
+    const parts = s.split('-')
+    if (parts.length === 3) {
+      const y = parseInt(parts[0], 10)
+      const m = parseInt(parts[1], 10)
+      if (!isNaN(y) && !isNaN(m)) return `${y}-${String(m).padStart(2,'0')}`
+    }
+    return null
   }
   const [state, setState] = useState(() => {
     const raw = loadState(STORAGE_KEY) || {}
@@ -168,7 +173,8 @@ function InnerApp() {
     // if no date provided and user has a selected date in agenda, default to that
     const e = { ...expense }
     if ((!e.date || e.date === null) && agendaView.selectedDate) {
-      e.date = new Date(agendaView.selectedDate).toISOString()
+      // store date as YYYY-MM-DD (date-only) to avoid timezone shifts
+      e.date = agendaView.selectedDate
     }
     // if non-recurring and date belongs to another month, store in monthly bucket
     if (!e.recurring) {
@@ -186,7 +192,8 @@ function InnerApp() {
   const addIncome = (income) => {
     const i = { ...income }
     if ((!i.date || i.date === null) && agendaView.selectedDate) {
-      i.date = new Date(agendaView.selectedDate).toISOString()
+      // store date as YYYY-MM-DD (date-only) to avoid timezone shifts
+      i.date = agendaView.selectedDate
     }
     if (!i.recurring) {
       const key = monthKeyForDate(i.date)

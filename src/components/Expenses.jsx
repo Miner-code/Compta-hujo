@@ -28,10 +28,11 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
       name,
       category,
       amount: amt,
-      date: date ? new Date(date).toISOString() : null,
+      // store as date-only YYYY-MM-DD to avoid timezone shifting
+      date: date ? date : null,
       recurring,
-      recurringStart: recurringStart ? new Date(recurringStart).toISOString() : null,
-      recurringEnd: recurringEnd ? new Date(recurringEnd).toISOString() : null
+      recurringStart: recurringStart ? recurringStart : null,
+      recurringEnd: recurringEnd ? recurringEnd : null
     }
     onAdd(newExpense)
     setName('')
@@ -66,10 +67,10 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
       name: editFields.name,
       category: editFields.category,
       amount: amt,
-      date: editFields.date ? new Date(editFields.date).toISOString() : null,
+      date: editFields.date ? editFields.date : null,
       recurring: !!editFields.recurring,
-      recurringStart: editFields.recurringStart ? new Date(editFields.recurringStart).toISOString() : null,
-      recurringEnd: editFields.recurringEnd ? new Date(editFields.recurringEnd).toISOString() : null
+      recurringStart: editFields.recurringStart ? editFields.recurringStart : null,
+      recurringEnd: editFields.recurringEnd ? editFields.recurringEnd : null
     }
     onUpdate(id, patch)
     cancelEdit()
@@ -168,7 +169,14 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">{e.name}</div>
-                  <div className="text-xs text-gray-500">{e.category} · {e.recurring ? 'Recurring' : (e.date ? new Date(e.date).toLocaleDateString() : 'No date')}</div>
+                  <div className="text-xs text-gray-500">{e.category} · {e.recurring ? 'Recurring' : (e.date ? (function(d){
+                    if (!d) return 'No date'
+                    if (d instanceof Date) return d.toLocaleDateString()
+                    const s = String(d).slice(0,10)
+                    const parts = s.split('-')
+                    if (parts.length === 3) return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).toLocaleDateString()
+                    return new Date(d).toLocaleDateString()
+                  })(e.date) : 'No date')}</div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 font-semibold text-red-600">

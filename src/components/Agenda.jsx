@@ -1,9 +1,29 @@
 import React, { useMemo, useState } from 'react'
 
+function parseYMD(s) {
+  if (!s) return null
+  const str = String(s).slice(0,10)
+  const parts = str.split('-')
+  if (parts.length !== 3) return null
+  const y = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10)
+  const d = parseInt(parts[2], 10)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return null
+  return { y, m, d }
+}
+
+function formatDateKeyFromYMD(y,m,d) {
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+}
+
 function formatDateKey(d) {
   if (!d) return null
+  if (d instanceof Date) return formatDateKeyFromYMD(d.getFullYear(), d.getMonth()+1, d.getDate())
+  const ymd = parseYMD(d)
+  if (ymd) return formatDateKeyFromYMD(ymd.y, ymd.m, ymd.d)
   try {
-    return new Date(d).toISOString().slice(0,10)
+    const dt = new Date(d)
+    return formatDateKeyFromYMD(dt.getFullYear(), dt.getMonth()+1, dt.getDate())
   } catch (e) {
     return null
   }
@@ -41,16 +61,17 @@ export default function Agenda({ expenses = [], incomes = [], viewYear: propYear
         // determine day-of-month for recurring event
         let day = 1
         if (exp.date) {
-          try { day = new Date(exp.date).getDate() } catch (e) { day = 1 }
+          const p = parseYMD(exp.date)
+          day = p ? p.d : 1
         }
         // clamp
         if (day > daysInMonth) day = daysInMonth
         const key = `${viewYear.toString().padStart(4,'0')}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
         push(eMap, key, exp)
       } else if (exp.date) {
-        const d = new Date(exp.date)
-        if (d.getFullYear() === viewYear && d.getMonth() === viewMonth) {
-          const key = d.toISOString().slice(0,10)
+        const p = parseYMD(exp.date)
+        if (p && p.y === viewYear && (p.m - 1) === viewMonth) {
+          const key = formatDateKeyFromYMD(p.y, p.m, p.d)
           push(eMap, key, exp)
         }
       }
@@ -60,15 +81,16 @@ export default function Agenda({ expenses = [], incomes = [], viewYear: propYear
       if (inc.recurring) {
         let day = 1
         if (inc.date) {
-          try { day = new Date(inc.date).getDate() } catch (e) { day = 1 }
+          const p = parseYMD(inc.date)
+          day = p ? p.d : 1
         }
         if (day > daysInMonth) day = daysInMonth
         const key = `${viewYear.toString().padStart(4,'0')}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
         push(iMap, key, inc)
       } else if (inc.date) {
-        const d = new Date(inc.date)
-        if (d.getFullYear() === viewYear && d.getMonth() === viewMonth) {
-          const key = d.toISOString().slice(0,10)
+        const p = parseYMD(inc.date)
+        if (p && p.y === viewYear && (p.m - 1) === viewMonth) {
+          const key = formatDateKeyFromYMD(p.y, p.m, p.d)
           push(iMap, key, inc)
         }
       }
@@ -128,7 +150,7 @@ export default function Agenda({ expenses = [], incomes = [], viewYear: propYear
       <div className="grid grid-cols-7 gap-1 mt-2">
         {cells.map((cell, idx) => {
           if (!cell) return <div key={idx} className="h-20 border rounded p-1 bg-gray-50" />
-          const key = cell.toISOString().slice(0,10)
+            const key = formatDateKey(cell)
           const dayExpenses = expensesByDate[key] || []
           const dayIncomes = incomesByDate[key] || []
           const isSelected = selectedDate === key
