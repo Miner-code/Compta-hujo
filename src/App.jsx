@@ -87,6 +87,18 @@ function InnerApp() {
     return Array.isArray(raw) && raw.length ? raw : ['Rent','Groceries','Transport','Utilities','Entertainment','Subscriptions','Other']
   })
 
+  // normalize and persist categories. addCategory enforces trimming and case-insensitive uniqueness.
+  const addCategory = (c) => {
+    const name = String(c || '').trim()
+    if (!name) return
+    setCategories(cs => {
+      const base = Array.isArray(cs) ? cs : []
+      // avoid case-insensitive duplicates
+      if (base.find(x => x.toLowerCase() === name.toLowerCase())) return base
+      return [...base, name]
+    })
+  }
+
   useEffect(() => {
     saveState(STORAGE_KEY + ':categories', categories)
   }, [categories])
@@ -229,7 +241,7 @@ function InnerApp() {
                 onUpdate={updateIncome}
                 onRemove={removeIncome}
                 categories={categories}
-                onAddCategory={(c) => setCategories(cs => Array.from(new Set([...(cs||[]), c])))}
+                onAddCategory={addCategory}
               />
           </div>
 
@@ -240,7 +252,7 @@ function InnerApp() {
               onUpdate={updateExpense}
               onRemove={removeExpense}
               categories={categories}
-              onAddCategory={(c) => setCategories(cs => Array.from(new Set([...(cs||[]), c])))}
+              onAddCategory={addCategory}
             />
           </div>
         </section>

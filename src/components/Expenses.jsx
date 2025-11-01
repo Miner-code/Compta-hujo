@@ -90,7 +90,7 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
             <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
               {categories && categories.map(c => <option key={c}>{c}</option>)}
             </select>
-            <CategoryCreator onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} />
+            <CategoryCreator categories={categories} onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} />
           </div>
         </div>
         <div>
@@ -198,23 +198,36 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
   )
 }
 
-function CategoryCreator({ onAddCategory }) {
+function CategoryCreator({ onAddCategory, categories = [] }) {
   const [open, setOpen] = React.useState(false)
   const [val, setVal] = React.useState('')
+  const inpRef = React.useRef(null)
+
+  React.useEffect(() => {
+    if (open && inpRef.current) inpRef.current.focus()
+  }, [open])
 
   const submit = (e) => {
-    e.preventDefault()
-    if (!val) return
-    onAddCategory && onAddCategory(val)
+    e && e.preventDefault()
+    const trimmed = String(val || '').trim()
+    if (!trimmed) return
+    // avoid obvious duplicates client-side (App also dedupes case-insensitively)
+    if (categories && categories.find(x => x.toLowerCase() === trimmed.toLowerCase())) {
+      setVal('')
+      setOpen(false)
+      return
+    }
+    onAddCategory && onAddCategory(trimmed)
     setVal('')
     setOpen(false)
   }
 
-  if (!open) return <button type="button" onClick={() => setOpen(true)} className="bg-gray-100 px-2 py-1 rounded">+</button>
+  if (!open) return <button type="button" onClick={() => setOpen(true)} title="Add category" className="bg-gray-100 px-2 py-1 rounded">+</button>
   return (
     <form onSubmit={submit} className="flex gap-2">
-      <input value={val} onChange={e => setVal(e.target.value)} placeholder="New category" className="border rounded px-2 py-1" />
+      <input ref={inpRef} value={val} onChange={e => setVal(e.target.value)} placeholder="New category" className="border rounded px-2 py-1" />
       <button className="bg-blue-600 text-white px-2 py-1 rounded">Add</button>
+      <button type="button" onClick={() => { setVal(''); setOpen(false) }} className="bg-gray-200 px-2 py-1 rounded">Cancel</button>
     </form>
   )
 }
