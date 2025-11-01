@@ -280,28 +280,27 @@ function InnerApp() {
 
   <footer className="text-center text-sm text-gray-500">Data is stored locally in your browser. Protect your device to keep your data safe.</footer>
       </main>
+      {showCategoriesManager && (
+        <CategoriesManager
+          categories={categories}
+          onClose={() => { if (pendingSelectRef) pendingSelectRef.current = null; setShowCategoriesManager(false) }}
+          onAddCategory={(name) => {
+            // persist centrally
+            addCategory(name)
+            if (pendingSelectRef && pendingSelectRef.current) {
+              try { pendingSelectRef.current(name) } catch (e) { console.error(e) }
+              pendingSelectRef.current = null
+              setShowCategoriesManager(false)
+              return
+            }
+          }}
+          onRenameCategory={renameCategory}
+          onDeleteCategory={deleteCategory}
+        />
+      )}
     </div>
   )
 }
 
 // render categories manager modal if requested
-function CategoriesManagerHost({ show, onClose, categories, onAddCategory, onRenameCategory, onDeleteCategory }) {
-  if (!show) return null
-  const CM = require('./components/CategoriesManager').default
-  const handleAdd = (name) => {
-    // use the centralized addCategory to persist
-    onAddCategory && onAddCategory(name)
-    // if a pending select callback exists, call it and then close modal
-    if (pendingSelectRef && pendingSelectRef.current) {
-      try { pendingSelectRef.current(name) } catch (e) { console.error(e) }
-      pendingSelectRef.current = null
-      setShowCategoriesManager(false)
-      return
-    }
-  }
-  const handleClose = () => {
-    if (pendingSelectRef) pendingSelectRef.current = null
-    onClose && onClose()
-  }
-  return <CM categories={categories} onClose={handleClose} onAddCategory={handleAdd} onRenameCategory={onRenameCategory} onDeleteCategory={onDeleteCategory} />
-}
+// CategoriesManagerHost removed; rendering CategoriesManager directly above to avoid dynamic require() in browser.
