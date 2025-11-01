@@ -105,6 +105,7 @@ function InnerApp() {
 
   // categories manager modal
   const [showCategoriesManager, setShowCategoriesManager] = useState(false)
+  const pendingSelectRef = useRef(null)
 
   const renameCategory = (oldName, newName) => {
     if (!oldName || !newName || oldName === newName) return
@@ -222,6 +223,11 @@ function InnerApp() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   if (!user) return <AuthPage />
+  const openCategoryModal = (selectCallback) => {
+    pendingSelectRef.current = typeof selectCallback === 'function' ? selectCallback : null
+    setShowCategoriesManager(true)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <Header onOpenCategories={() => setShowCategoriesManager(true)} />
@@ -242,6 +248,7 @@ function InnerApp() {
                 onRemove={removeIncome}
                 categories={categories}
                 onAddCategory={addCategory}
+                onOpenCategoryModal={openCategoryModal}
               />
           </div>
 
@@ -253,6 +260,7 @@ function InnerApp() {
               onRemove={removeExpense}
               categories={categories}
               onAddCategory={addCategory}
+              onOpenCategoryModal={openCategoryModal}
             />
           </div>
         </section>
@@ -280,5 +288,20 @@ function InnerApp() {
 function CategoriesManagerHost({ show, onClose, categories, onAddCategory, onRenameCategory, onDeleteCategory }) {
   if (!show) return null
   const CM = require('./components/CategoriesManager').default
-  return <CM categories={categories} onClose={onClose} onAddCategory={onAddCategory} onRenameCategory={onRenameCategory} onDeleteCategory={onDeleteCategory} />
+  const handleAdd = (name) => {
+    // use the centralized addCategory to persist
+    onAddCategory && onAddCategory(name)
+    // if a pending select callback exists, call it and then close modal
+    if (pendingSelectRef && pendingSelectRef.current) {
+      try { pendingSelectRef.current(name) } catch (e) { console.error(e) }
+      pendingSelectRef.current = null
+      setShowCategoriesManager(false)
+      return
+    }
+  }
+  const handleClose = () => {
+    if (pendingSelectRef) pendingSelectRef.current = null
+    onClose && onClose()
+  }
+  return <CM categories={categories} onClose={handleClose} onAddCategory={handleAdd} onRenameCategory={onRenameCategory} onDeleteCategory={onDeleteCategory} />
 }

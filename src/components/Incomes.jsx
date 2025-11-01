@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categories = [], onAddCategory }) {
+export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categories = [], onAddCategory, onOpenCategoryModal }) {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(categories && categories.length ? categories[0] : '')
@@ -48,7 +48,7 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
             <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
               {categories && categories.map(c => <option key={c}>{c}</option>)}
             </select>
-            <CategoryCreator categories={categories} onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} />
+            <CategoryCreator categories={categories} onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} onOpenCategoryModal={(cb) => onOpenCategoryModal && onOpenCategoryModal(cb)} setSelected={setCategory} />
           </div>
         </div>
           <div>
@@ -108,7 +108,12 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
   )
 }
 
-    function CategoryCreator({ onAddCategory, categories = [] }) {
+    function CategoryCreator({ onAddCategory, categories = [], onOpenCategoryModal, setSelected }) {
+      // If parent provides onOpenCategoryModal, open the global modal and ask it to select the category when created
+      if (onOpenCategoryModal) {
+        return <button type="button" title="Add category" onClick={() => onOpenCategoryModal && onOpenCategoryModal((name) => { if (setSelected) setSelected(name) })} className="bg-gray-100 px-2 py-1 rounded">+</button>
+      }
+
       const [open, setOpen] = React.useState(false)
       const [val, setVal] = React.useState('')
       const inpRef = React.useRef(null)
