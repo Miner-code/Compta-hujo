@@ -3,3 +3,5 @@ node_modules/
 dist/
 /.venv
 .DS_Store
+# Local Netlify folder
+.netlify
