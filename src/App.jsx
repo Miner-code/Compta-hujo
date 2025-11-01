@@ -224,7 +224,7 @@ function InnerApp() {
   if (!user) return <AuthPage />
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <Header />
+      <Header onOpenCategories={() => setShowCategoriesManager(true)} />
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <section id="overview" className="bg-white p-6 rounded shadow-sm">
@@ -274,4 +274,11 @@ function InnerApp() {
       </main>
     </div>
   )
+}
+
+// render categories manager modal if requested
+function CategoriesManagerHost({ show, onClose, categories, onAddCategory, onRenameCategory, onDeleteCategory }) {
+  if (!show) return null
+  const CM = require('./components/CategoriesManager').default
+  return <CM categories={categories} onClose={onClose} onAddCategory={onAddCategory} onRenameCategory={onRenameCategory} onDeleteCategory={onDeleteCategory} />
 }

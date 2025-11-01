@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
-export default function Header() {
+export default function Header({ onOpenCategories }) {
   const { user, logout } = useAuth()
 
   return (
@@ -18,6 +18,7 @@ export default function Header() {
           <a href="#overview" className="hover:underline">Overview</a>
           <a href="#transactions" className="hover:underline">Transactions</a>
           <a href="#invest" className="hover:underline">Invest</a>
+          <button onClick={() => onOpenCategories && onOpenCategories()} className="ml-2 bg-gray-100 text-gray-700 px-2 py-1 rounded">Categories</button>
         </nav>
         <div className="flex items-center gap-3">
           {user && <div className="text-sm text-gray-700 hidden sm:block">{user.email}</div>}

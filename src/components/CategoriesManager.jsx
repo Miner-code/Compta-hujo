@@ -4,6 +4,8 @@ export default function CategoriesManager({ categories = [], onClose, onAddCateg
   const [newCat, setNewCat] = useState('')
   const [editing, setEditing] = useState(null)
   const [editVal, setEditVal] = useState('')
+  // track replacement selections in state instead of DOM lookups
+  const [replacements, setReplacements] = useState(() => ({}))
 
   const startEdit = (c) => { setEditing(c); setEditVal(c) }
   const saveEdit = () => {
@@ -52,15 +54,13 @@ export default function CategoriesManager({ categories = [], onClose, onAddCateg
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <select id={`replace-${c}`} className="border rounded px-2 py-1">
+                <select value={replacements[c] || ''} onChange={ev => setReplacements(r => ({ ...r, [c]: ev.target.value }))} className="border rounded px-2 py-1">
                   <option value="">-- keep as-is --</option>
                   {categories.filter(x => x !== c).map(x => <option key={x} value={x}>{x}</option>)}
                 </select>
-                <button onClick={(ev) => {
-                  const sel = document.getElementById(`replace-${c}`)
-                  const val = sel ? sel.value : ''
+                <button onClick={() => {
+                  const val = replacements[c] || ''
                   if (val === '') {
-                    // no replacement chosen - delete categories only
                     onDeleteCategory && onDeleteCategory(c, null)
                   } else {
                     onDeleteCategory && onDeleteCategory(c, val)
