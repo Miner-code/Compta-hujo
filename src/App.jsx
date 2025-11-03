@@ -178,6 +178,7 @@ function InnerApp() {
     return {
       salary: Number(raw.salary || 0),
       initialBalance: Number(raw.initialBalance || 0),
+      risk: raw.risk || 'moderate',
       expenses: Array.isArray(raw.expenses) ? raw.expenses : [], // ensure array
       incomes: Array.isArray(raw.incomes) ? raw.incomes : [] // ensure array
     }
@@ -189,6 +190,7 @@ function InnerApp() {
 
   const setSalary = (salary) => setState(s => ({ ...s, salary }))
   const setInitialBalance = (initialBalance) => setState(s => ({ ...s, initialBalance }))
+  const setRisk = (risk) => setState(s => ({ ...s, risk }))
   const addExpense = (expense) => {
     // if no date provided and user has a selected date in agenda, default to that
     const e = { ...expense }
@@ -267,7 +269,7 @@ function InnerApp() {
                 <SalaryInput salary={state.salary} onSave={setSalary} />
               </div>
               <div className="md:col-span-2">
-                <Dashboard salary={state.salary} initialBalance={state.initialBalance} expenses={state.expenses} incomes={state.incomes} />
+                <Dashboard salary={state.salary} initialBalance={state.initialBalance} expenses={state.expenses} incomes={state.incomes} risk={state.risk} setRisk={setRisk} />
               </div>
             </section>
             <section>
@@ -301,7 +303,7 @@ function InnerApp() {
         )}
 
         {route === '/invest' && (
-          <InvestPage savings={totals.savings || 0} />
+          <InvestPage savings={totals.savings || 0} risk={state.risk} setRisk={setRisk} />
         )}
 
         <footer className="text-center text-sm text-gray-500">Data is stored locally in your browser. Protect your device to keep your data safe.</footer>

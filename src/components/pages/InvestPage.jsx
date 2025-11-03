@@ -3,13 +3,21 @@ import PageWrapper from '../PageWrapper'
 import PieChart from '../PieChart'
 import { suggestInvestments } from '../../utils/investment'
 
-export default function InvestPage({ savings }) {
-  const plan = suggestInvestments(savings, { risk: 'moderate' })
+export default function InvestPage({ savings, risk = 'moderate', setRisk }) {
+  const plan = suggestInvestments(savings, { risk: risk || 'moderate' })
   return (
     <PageWrapper>
       <section className="max-w-5xl mx-auto px-6 py-8">
         <div className="card p-6">
           <h2 className="text-lg font-semibold mb-3">Investment suggestions</h2>
+          <div className="mt-3">
+            <div className="text-sm text-gray-600 mr-2">Risk profile:</div>
+            <div className="flex gap-2 mt-2">
+              {['conservative','moderate','aggressive'].map(r => (
+                <button key={r} onClick={() => { if (typeof setRisk === 'function') setRisk(r) }} className={"px-3 py-1 rounded text-sm " + ((risk||'moderate') === r ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700')}>{r === 'conservative' ? 'Conservative' : r === 'moderate' ? 'Moderate' : 'Aggressive'}</button>
+              ))}
+            </div>
+          </div>
           <div className="md:flex md:items-start md:gap-6">
             <div className="md:w-1/3">
               <PieChart labels={plan.suggestions.map(s=>s.name)} values={plan.suggestions.map(s=>s.amount)} />

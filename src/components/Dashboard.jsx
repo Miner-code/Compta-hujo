@@ -43,7 +43,7 @@ function parseDateToLocal(dateStr) {
   return new Date(dateStr)
 }
 
-export default function Dashboard({ salary = 0, expenses = [], incomes = [], initialBalance = 0 }) {
+export default function Dashboard({ salary = 0, expenses = [], incomes = [], initialBalance = 0, risk = 'moderate', setRisk }) {
   const [includeFuture, setIncludeFuture] = useState(true)
   const [showProjectionModal, setShowProjectionModal] = useState(false)
   const totals = useMemo(() => computeMonthlyTotals(salary, expenses, incomes, { includeFuture, initialBalance }), [salary, expenses, incomes, includeFuture, initialBalance])
@@ -51,7 +51,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
   const [loadingCryptos, setLoadingCryptos] = useState(false)
   const [cryptoError, setCryptoError] = useState(null)
   const [investments, setInvestments] = useState(null)
-  const [selectedRisk, setSelectedRisk] = useState('moderate')
+  const selectedRisk = risk || 'moderate'
   const investmentPlan = useMemo(() => suggestInvestments(totals.savings, { risk: selectedRisk }), [totals.savings, selectedRisk])
   const SCHEDULE_KEY = 'compta:v1:scheduledInvestments'
   const [showSchedule, setShowSchedule] = useState(false)
@@ -313,7 +313,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
                 {['conservative','moderate','aggressive'].map(r => (
                   <button
                     key={r}
-                    onClick={() => setSelectedRisk(r)}
+                    onClick={() => { if (typeof setRisk === 'function') setRisk(r) }}
                     className={"px-3 py-1 rounded text-sm " + (selectedRisk === r ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700')}
                   >{r === 'conservative' ? 'Conservative' : r === 'moderate' ? 'Moderate' : 'Aggressive'}</button>
                 ))}
