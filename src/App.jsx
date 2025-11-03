@@ -175,6 +175,18 @@ function InnerApp() {
     saveState(STORAGE_KEY + ':monthly', monthly)
   }, [monthly])
 
+  // simple hash-based route state ("/", "/dashboard", "/transactions", "/invest")
+  const [route, setRoute] = useState(() => {
+    const h = (typeof window !== 'undefined' && window.location.hash) ? window.location.hash.replace(/^#/, '') : '/'
+    return h || '/'
+  })
+
+  useEffect(() => {
+    const onHash = () => setRoute(window.location.hash.replace(/^#/, '') || '/')
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
   const monthKeyForDate = (isoDate) => {
     if (!isoDate) return null
     // isoDate is expected in YYYY-MM-DD or an ISO string. Safely parse YYYY-MM-DD without timezone shifts.
@@ -262,18 +274,6 @@ function InnerApp() {
     pendingSelectRef.current = typeof selectCallback === 'function' ? selectCallback : null
     setShowCategoriesManager(true)
   }
-
-  // simple hash-based route state ("/", "/dashboard", "/transactions", "/invest")
-  const [route, setRoute] = useState(() => {
-    const h = (typeof window !== 'undefined' && window.location.hash) ? window.location.hash.replace(/^#/, '') : '/'
-    return h || '/'
-  })
-
-  useEffect(() => {
-    const onHash = () => setRoute(window.location.hash.replace(/^#/, '') || '/')
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
-  }, [])
 
   // compute derived totals for invest page / display
   const totals = computeMonthlyTotals(state.salary, state.expenses, state.incomes, { includeFuture: true, initialBalance: state.initialBalance })
