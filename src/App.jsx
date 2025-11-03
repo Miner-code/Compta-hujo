@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import Header from './components/Header'
 import CategoriesManager from './components/CategoriesManager'
 import SalaryInput from './components/SalaryInput'
+import InitialBalanceInput from './components/InitialBalanceInput'
 import Expenses from './components/Expenses'
 import Incomes from './components/Incomes'
 import Dashboard from './components/Dashboard'
@@ -172,6 +173,7 @@ function InnerApp() {
     const raw = loadState(STORAGE_KEY) || {}
     return {
       salary: Number(raw.salary || 0),
+      initialBalance: Number(raw.initialBalance || 0),
       expenses: Array.isArray(raw.expenses) ? raw.expenses : [], // ensure array
       incomes: Array.isArray(raw.incomes) ? raw.incomes : [] // ensure array
     }
@@ -182,6 +184,7 @@ function InnerApp() {
   }, [state])
 
   const setSalary = (salary) => setState(s => ({ ...s, salary }))
+  const setInitialBalance = (initialBalance) => setState(s => ({ ...s, initialBalance }))
   const addExpense = (expense) => {
     // if no date provided and user has a selected date in agenda, default to that
     const e = { ...expense }
@@ -240,6 +243,7 @@ function InnerApp() {
 
         <section id="inputs" className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
+            <InitialBalanceInput initialBalance={state.initialBalance} onSave={setInitialBalance} />
             <SalaryInput salary={state.salary} onSave={setSalary} />
             <Incomes
                 incomes={state.incomes}
@@ -266,7 +270,7 @@ function InnerApp() {
         </section>
 
         <section id="dashboard">
-          <Dashboard salary={state.salary} expenses={state.expenses} incomes={state.incomes} />
+          <Dashboard salary={state.salary} initialBalance={state.initialBalance} expenses={state.expenses} incomes={state.incomes} />
           <Agenda
             expenses={state.expenses}
             incomes={state.incomes}

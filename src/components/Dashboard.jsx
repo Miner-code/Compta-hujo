@@ -42,9 +42,9 @@ function parseDateToLocal(dateStr) {
   return new Date(dateStr)
 }
 
-export default function Dashboard({ salary = 0, expenses = [], incomes = [] }) {
+export default function Dashboard({ salary = 0, expenses = [], incomes = [], initialBalance = 0 }) {
   const [includeFuture, setIncludeFuture] = useState(true)
-  const totals = useMemo(() => computeMonthlyTotals(salary, expenses, incomes, { includeFuture }), [salary, expenses, incomes, includeFuture])
+  const totals = useMemo(() => computeMonthlyTotals(salary, expenses, incomes, { includeFuture, initialBalance }), [salary, expenses, incomes, includeFuture, initialBalance])
   const [topCryptos, setTopCryptos] = useState([])
   const [loadingCryptos, setLoadingCryptos] = useState(false)
   const [cryptoError, setCryptoError] = useState(null)
@@ -155,6 +155,34 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [] }) {
         </div>
 
         <div className="flex justify-between text-sm">
+          <div>Current account balance (entered)</div>
+          <div className="font-semibold">€{(Number(initialBalance) || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+        </div>
+
+        <div className="flex justify-between text-sm">
+          <div>Projected balance (end of month)</div>
+          <div className="font-semibold">€{(totals.availableNow || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+        </div>
+
+        {/* Difference between actual entered balance and projection */}
+        <div className="flex justify-between text-sm">
+          <div>Difference (actual − projected)</div>
+          {(() => {
+            const actual = Number(initialBalance) || 0
+            const projected = Number(totals.availableNow) || 0
+            const diff = actual - projected
+            const cls = diff >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'
+            const pct = projected === 0 ? null : (diff / projected) * 100
+            return (
+              <div className={cls}>
+                <div>€{diff.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                <div className="text-xs text-gray-500">{pct === null ? 'N/A' : (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%'}</div>
+              </div>
+            )
+          })()}
+        </div>
+
+        <div className="flex justify-between text-sm">
           <div>Income this month</div>
           <div className="font-semibold">€{totals.incomeThisMonth.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
         </div>
@@ -164,15 +192,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [] }) {
           <div className="font-semibold">€{totals.expenseThisMonth.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
         </div>
 
-        <div className="flex justify-between text-sm">
-          <div>Known future incomes</div>
-          <div className="font-semibold">€{totals.futureIncome.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-        </div>
-
-        <div className="flex justify-between text-sm">
-          <div>Known future expenses</div>
-          <div className="font-semibold">€{totals.futureExpense.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-        </div>
+        
 
         <div className="flex justify-between text-sm">
           <div>Projected savings</div>

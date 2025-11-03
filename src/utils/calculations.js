@@ -1,6 +1,6 @@
 // utilities to compute totals
 
-export function computeMonthlyTotals(salary, expenses = [], incomes = [], { includeFuture = true } = {}) {
+export function computeMonthlyTotals(salary, expenses = [], incomes = [], { includeFuture = true, initialBalance = 0 } = {}) {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
@@ -40,6 +40,7 @@ export function computeMonthlyTotals(salary, expenses = [], incomes = [], { incl
   const netThisMonth = incomeThisMonth - expenseThisMonth
   const futureNet = incomeFuture - expenseFuture
   const savings = netThisMonth - (includeFuture ? Math.max(0, expenseFuture - incomeFuture) : 0)
+  const availableNow = (Number(initialBalance) || 0) + incomeThisMonth - expenseThisMonth
 
   return {
     incomeThisMonth,
@@ -48,6 +49,7 @@ export function computeMonthlyTotals(salary, expenses = [], incomes = [], { incl
     futureExpense: expenseFuture,
     thisMonth: expenseThisMonth,
     future: expenseFuture,
-    savings
+    savings,
+    availableNow
   }
 }
