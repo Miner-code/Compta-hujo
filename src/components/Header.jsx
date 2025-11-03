@@ -5,24 +5,27 @@ export default function Header({ onOpenCategories }) {
   const { user, logout } = useAuth()
 
   return (
-    <header className="bg-white border-b">
-      <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center text-white font-bold">C</div>
+    <header className="bg-gradient-to-r from-white to-white border-b">
+      <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{background: 'linear-gradient(135deg,var(--color-primary), var(--color-accent))'}}>C</div>
           <div>
-            <div className="text-lg font-semibold">Compta</div>
-            <div className="text-xs text-gray-500">Simple money management</div>
+            <div className="text-xl font-semibold">Compta</div>
+            <div className="text-xs text-gray-500">Your simple finance companion</div>
           </div>
         </div>
-        <nav className="text-sm text-gray-600 hidden md:flex gap-4 items-center">
-          <a href="#overview" className="hover:underline">Overview</a>
-          <a href="#transactions" className="hover:underline">Transactions</a>
-          <a href="#invest" className="hover:underline">Invest</a>
-          <button onClick={() => onOpenCategories && onOpenCategories()} className="ml-2 bg-gray-100 text-gray-700 px-2 py-1 rounded">Categories</button>
+
+        <nav className="text-sm text-gray-600 hidden md:flex gap-6 items-center">
+          <a href="#/" className="hover:text-gray-900">Home</a>
+          <a href="#/dashboard" className="hover:text-gray-900">Dashboard</a>
+          <a href="#/transactions" className="hover:text-gray-900">Transactions</a>
+          <a href="#/invest" className="hover:text-gray-900">Invest</a>
+          <button onClick={() => onOpenCategories && onOpenCategories()} className="btn btn-ghost">Categories</button>
         </nav>
+
         <div className="flex items-center gap-3">
           {user && <div className="text-sm text-gray-700 hidden sm:block">{user.email}</div>}
-          <button onClick={async () => { try { await logout() } catch (e) { console.error(e) } }} className="ml-2 bg-gray-100 text-gray-700 px-3 py-1 rounded">Logout</button>
+          <button onClick={async () => { try { await logout() } catch (e) { console.error(e) } }} className="btn btn-ghost">Logout</button>
         </div>
       </div>
     </header>

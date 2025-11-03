@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { computeMonthlyTotals } from '../utils/calculations'
 import { fetchTopCryptoGainers } from '../services/market'
 import PieChart from './PieChart'
+import CSVImport from './CSVImport'
 import { suggestInvestments } from '../utils/investment'
 import ExpensePie from './ExpensePie'
 import { loadState, saveState } from '../utils/storage'
@@ -44,6 +45,7 @@ function parseDateToLocal(dateStr) {
 
 export default function Dashboard({ salary = 0, expenses = [], incomes = [], initialBalance = 0 }) {
   const [includeFuture, setIncludeFuture] = useState(true)
+  const [showProjectionModal, setShowProjectionModal] = useState(false)
   const totals = useMemo(() => computeMonthlyTotals(salary, expenses, incomes, { includeFuture, initialBalance }), [salary, expenses, incomes, includeFuture, initialBalance])
   const [topCryptos, setTopCryptos] = useState([])
   const [loadingCryptos, setLoadingCryptos] = useState(false)
@@ -54,6 +56,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
   const SCHEDULE_KEY = 'compta:v1:scheduledInvestments'
   const [showSchedule, setShowSchedule] = useState(false)
   const [scheduled, setScheduled] = useState([])
+  const [showImportModal, setShowImportModal] = useState(false)
   const [schedAmount, setSchedAmount] = useState(investmentPlan.total || 0)
   const [schedDate, setSchedDate] = useState(() => {
     const d = new Date()
@@ -145,6 +148,56 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
     saveState(SCHEDULE_KEY, next)
   }
 
+  // Build itemized projection breakdown (same heuristics as computeMonthlyTotals)
+  const projectionBreakdown = (() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const today = now.getDate()
+
+    function dayOfMonthFrom(d) {
+      if (!d) return null
+      try { return new Date(d).getDate() } catch (e) { return null }
+    }
+
+    const incomeItems = []
+    const expenseItems = []
+
+    for (const e of expenses) {
+      if (e.recurring) {
+        const ds = dayOfMonthFrom(e.recurringStart)
+        if (ds && ds >= today) expenseItems.push({ ...e, reason: 'recurring', day: ds })
+      } else if (e.date) {
+        const d = new Date(e.date)
+        if (d.getFullYear() === year && d.getMonth() === month && d.getDate() >= today) {
+          expenseItems.push({ ...e, reason: 'scheduled', day: d.getDate() })
+        }
+      }
+    }
+
+    for (const i of incomes) {
+      if (i.recurring) {
+        const ds = dayOfMonthFrom(i.recurringStart)
+        if (ds && ds >= today) incomeItems.push({ ...i, reason: 'recurring', day: ds })
+      } else if (i.date) {
+        const d = new Date(i.date)
+        if (d.getFullYear() === year && d.getMonth() === month && d.getDate() >= today) {
+          incomeItems.push({ ...i, reason: 'scheduled', day: d.getDate() })
+        }
+      }
+    }
+
+    // salary heuristic: add as income item if today === 1
+    if (Number(salary) && today === 1) incomeItems.unshift({ id: 'salary', name: 'Salary', amount: Number(salary), reason: 'salary', day: 1 })
+
+    const incomeRemaining = incomeItems.reduce((s, it) => s + (Number(it.amount) || 0), 0)
+    const expenseRemaining = expenseItems.reduce((s, it) => s + (Number(it.amount) || 0), 0)
+
+    const projectedRemaining = (Number(initialBalance) || 0) + incomeRemaining - expenseRemaining
+
+    return { incomeItems, expenseItems, incomeRemaining, expenseRemaining, projectedRemaining }
+  })()
+
   return (
     <div className="bg-white p-4 rounded shadow-sm">
       <h2 className="text-lg font-medium mb-2">Dashboard</h2>
@@ -161,7 +214,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
 
         <div className="flex justify-between text-sm">
           <div>Projected balance (end of month)</div>
-          <div className="font-semibold">€{(totals.availableNow || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+          <div className="font-semibold">€{(totals.projectedRemaining || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})} <button onClick={() => setShowProjectionModal(true)} className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">Détail</button></div>
         </div>
 
         {/* Difference between actual entered balance and projection */}
@@ -169,7 +222,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
           <div>Difference (actual − projected)</div>
           {(() => {
             const actual = Number(initialBalance) || 0
-            const projected = Number(totals.availableNow) || 0
+            const projected = Number(totals.projectedRemaining) || 0
             const diff = actual - projected
             const cls = diff >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'
             const pct = projected === 0 ? null : (diff / projected) * 100
@@ -274,8 +327,39 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
 
           <div className="w-56 md:w-72">
             <PieChart
-              labels={['Expenses this month', 'Future expenses', 'Projected savings']}
-              values={[totals.expenseThisMonth || 0, totals.futureExpense || 0, Math.max(0, totals.savings) || 0]}
+              labels={(() => {
+                return [
+                  'Savings account (liquidity)',
+                  'Diversified equity ETF',
+                  'Bond funds',
+                  'Crypto'
+                ]
+              })()}
+              values={(() => {
+                const prefs = investmentPlan && Array.isArray(investmentPlan.suggestions) ? investmentPlan.suggestions : []
+                // map suggestions into the four buckets
+                const buckets = {
+                  savings: 0,
+                  equity: 0,
+                  bond: 0,
+                  crypto: 0
+                }
+
+                for (const s of prefs) {
+                  const name = (s.name || '').toLowerCase()
+                  const amt = Number(s.amount || 0)
+                  if (name.includes('savings')) buckets.savings += amt
+                  else if (name.includes('equity') || name.includes('etf') || name.includes('index') || name.includes('diversified')) buckets.equity += amt
+                  else if (name.includes('bond') || name.includes('fixed income')) buckets.bond += amt
+                  else if (name.includes('crypto')) buckets.crypto += amt
+                  else {
+                    // fallback: put unknown into equity
+                    buckets.equity += amt
+                  }
+                }
+
+                return [buckets.savings, buckets.equity, buckets.bond, buckets.crypto]
+              })()}
             />
           </div>
         </div>
@@ -302,6 +386,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
                 <div className="flex gap-2 items-start">
                   <button className="px-4 py-2 bg-green-600 text-white rounded" onClick={() => setShowSchedule(true)}>Schedule this investment</button>
                   <button className="px-4 py-2 bg-gray-100 rounded" onClick={exportCSV}>Export CSV</button>
+                  <button className="px-4 py-2 bg-blue-100 rounded" onClick={() => setShowImportModal(true)}>Import CSV</button>
                 </div>
 
                 {showSchedule && (
@@ -354,6 +439,84 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
           )}
         </div>
       </div>
+
+      {/* Projection details modal */}
+      {showProjectionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6">
+            <div className="flex items-start justify-between">
+              <h3 className="text-lg font-semibold">Détail du calcul — Projected balance</h3>
+              <button onClick={() => setShowProjectionModal(false)} className="btn btn-ghost">Fermer</button>
+            </div>
+            <div className="mt-4 space-y-3 text-sm">
+              <div className="flex justify-between"><div>Current account (entered)</div><div className="font-semibold">€{(Number(initialBalance)||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
+              <div className="border-t pt-2">
+                <div className="font-medium mb-1">Revenus restants (this month)</div>
+                {projectionBreakdown.incomeItems.length === 0 && <div className="text-xs text-gray-500">Aucun</div>}
+                <ul className="space-y-1">
+                  {projectionBreakdown.incomeItems.map(it => (
+                    <li key={it.id || it.name} className="flex justify-between">
+                      <div className="text-sm">{it.name} <span className="text-xs text-gray-400">({it.reason}{it.day? ' — day '+it.day: ''})</span></div>
+                      <div className="font-medium text-green-600">€{(Number(it.amount)||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex justify-between mt-2"><div className="text-xs text-gray-600">Total revenus restants</div><div className="font-semibold">€{projectionBreakdown.incomeRemaining.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
+              </div>
+
+              <div className="border-t pt-2">
+                <div className="font-medium mb-1">Dépenses restantes (this month)</div>
+                {projectionBreakdown.expenseItems.length === 0 && <div className="text-xs text-gray-500">Aucune</div>}
+                <ul className="space-y-1">
+                  {projectionBreakdown.expenseItems.map(it => (
+                    <li key={it.id || it.name} className="flex justify-between">
+                      <div className="text-sm">{it.name} <span className="text-xs text-gray-400">({it.reason}{it.day? ' — day '+it.day: ''})</span></div>
+                      <div className="font-medium text-red-600">€{(Number(it.amount)||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex justify-between mt-2"><div className="text-xs text-gray-600">Total dépenses restantes</div><div className="font-semibold">€{projectionBreakdown.expenseRemaining.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
+              </div>
+
+              <div className="border-t pt-3">
+                <div className="font-medium">Projection conservatrice (fin du mois)</div>
+                <div className="mt-2 text-sm">
+                  <div>Calcul détaillé :</div>
+                  <div className="ml-3">initialBalance = €{(Number(initialBalance)||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                  <div className="ml-3">+ total revenus restants = €{projectionBreakdown.incomeRemaining.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                  <div className="ml-3">- total dépenses restantes = €{projectionBreakdown.expenseRemaining.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                  <div className="ml-3 font-semibold mt-2">= projection conservatrice (fin du mois) : €{projectionBreakdown.projectedRemaining.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                </div>
+
+                <div className="mt-3 border-t pt-2">
+                  <div className="flex justify-between">
+                    <div>Différence (réel − projection)</div>
+                    {(() => {
+                      const actual = Number(initialBalance) || 0
+                      const projected = Number(projectionBreakdown.projectedRemaining) || 0
+                      const diff = actual - projected
+                      const cls = diff >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'
+                      const pct = projected === 0 ? null : (diff / projected) * 100
+                      return (
+                        <div className={cls}>
+                          <div>€{diff.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                          <div className="text-xs text-gray-500">{pct === null ? 'N/A' : (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%'}</div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="text-xs text-gray-500">Remarque: cette projection prend seulement en compte les transactions planifiées restantes pour ce mois (voir heuristiques dans la doc).</div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showImportModal && (
+        <CSVImport onClose={() => setShowImportModal(false)} />
+      )}
       
       {/* Expenses by category pie */}
       <div className="mt-6">
@@ -362,3 +525,5 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
     </div>
   )
 }
+
+// Projection details modal is rendered inside Dashboard and uses the same heuristics as computeMonthlyTotals

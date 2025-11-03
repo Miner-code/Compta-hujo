@@ -16,3 +16,45 @@ body {
 
 /* small utility */
 .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+/* Design system tokens */
+:root{
+  --color-bg: #f8fafc; /* gray-50 */
+  --color-surface: #ffffff;
+  --color-primary: #0f766e; /* teal-700 */
+  --color-accent: #06b6d4; /* cyan-400 */
+  --color-muted: #6b7280; /* gray-500 */
+  --radius: 12px;
+}
+
+/* Card */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(15,23,42,0.06);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .9rem;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 0;
+  cursor: pointer;
+}
+.btn-primary { background: var(--color-primary); color: white; }
+.btn-ghost { background: transparent; color: var(--color-muted); border: 1px solid rgba(15,23,42,0.06); }
+.btn-soft { background: #eefbf9; color: var(--color-primary); }
+
+/* Inputs */
+.input-base { padding: .6rem .8rem; border-radius: 8px; border: 1px solid #e6e9ef; width:100%; }
+
+/* Modal center */
+.modal-backdrop { background: rgba(2,6,23,0.5); }
+
+/* Tables */
+.table-compact th, .table-compact td { padding: .5rem .75rem; }
+
