@@ -279,7 +279,7 @@ function InnerApp() {
   const totals = computeMonthlyTotals(state.salary, state.expenses, state.incomes, { includeFuture: true, initialBalance: state.initialBalance })
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen">
       <Header onOpenCategories={() => setShowCategoriesManager(true)} theme={state.theme} setTheme={setTheme} />
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">

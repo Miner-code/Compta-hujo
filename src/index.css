@@ -7,7 +7,8 @@ html, body, #root {
 }
 
 body {
-  @apply bg-gray-50 text-gray-900;
+  background: var(--color-bg);
+  color: var(--color-on-bg, #0f172a);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
@@ -22,8 +23,17 @@ body {
   --color-bg: #f8fafc; /* gray-50 */
   --color-surface: #ffffff;
   --color-primary: #0f766e; /* teal-700 */
+  --color-on-primary: #ffffff;
+  --color-success: #059669;
+  --color-on-success: #ffffff;
+  --color-danger: #dc2626;
+  --color-on-danger: #ffffff;
   --color-accent: #06b6d4; /* cyan-400 */
-  --color-muted: #6b7280; /* gray-500 */
+  --color-on-bg: #0f172a; /* body text */
+  --color-on-surface: #0f172a; /* card text */
+  --color-muted: #6b7280; /* small text */
+  --color-border: rgba(15,23,42,0.06);
+  --color-surface-soft: #f1f5f9; /* subtle surfaces */
   --radius: 12px;
 }
 /* dark theme overrides */
@@ -31,9 +41,16 @@ body {
   --color-bg: #0b1220;
   --color-surface: #071129;
   --color-primary: #06b6d4;
+  --color-on-primary: #071129;
+  --color-success: #10b981;
+  --color-on-success: #071129;
+  --color-danger: #ef4444;
+  --color-on-danger: #071129;
   --color-accent: #7c3aed;
+  --color-on-bg: #e6eef6;
+  --color-on-surface: #e6eef6;
   --color-muted: #9ca3af;
-  color: #e6eef6;
+  --color-border: rgba(255,255,255,0.04);
 }
 
 /* Card */
@@ -66,4 +83,43 @@ body {
 
 /* Tables */
 .table-compact th, .table-compact td { padding: .5rem .75rem; }
+
+/* Surface / utility overrides to make Tailwind color utilities follow tokens */
+.surface { background: var(--color-surface); color: var(--color-on-surface); }
+.surface-soft { background: var(--color-surface-soft); }
+.muted { color: var(--color-muted); }
+.border-token { border-color: var(--color-border); }
+
+/* Force common Tailwind color utilities to follow tokens for theme switching */
+.bg-white { background-color: var(--color-surface) !important; color: var(--color-on-surface) !important }
+.bg-gray-50 { background-color: var(--color-bg) !important }
+.bg-gray-100 { background-color: var(--color-surface-soft) !important }
+.bg-gray-200 { background-color: var(--color-surface-soft) !important }
+.text-gray-500 { color: var(--color-muted) !important }
+.text-gray-600 { color: var(--color-muted) !important }
+.text-gray-700 { color: var(--color-on-surface) !important }
+.text-gray-900 { color: var(--color-on-surface) !important }
+.text-gray-400 { color: var(--color-muted) !important }
+
+/* Buttons using tokens */
+.btn { background: var(--color-surface); color: var(--color-on-surface); }
+.btn-primary { background: var(--color-primary); color: white }
+.btn-ghost { background: transparent; color: var(--color-muted); border: 1px solid var(--color-border) }
+.btn-soft { background: rgba(6,182,212,0.08); color: var(--color-primary) }
+
+/* Map common accent utilities to tokens so components don't need to be changed everywhere */
+.bg-indigo-600, .bg-blue-600 { background-color: var(--color-primary) !important; color: var(--color-on-primary) !important; }
+.bg-green-600 { background-color: var(--color-success) !important; color: var(--color-on-success) !important; }
+.bg-red-600 { background-color: var(--color-danger) !important; color: var(--color-on-danger) !important; }
+.text-white { color: var(--color-on-primary) !important; }
+
+/* Hover utilities mapping (escape colon for selector) */
+.hover\:bg-gray-50:hover { background-color: var(--color-bg) !important; }
+.hover\:bg-gray-100:hover { background-color: var(--color-surface-soft) !important; }
+.hover\:bg-gray-200:hover { background-color: var(--color-surface-soft) !important; }
+.hover\:bg-indigo-600:hover, .hover\:bg-blue-600:hover { background-color: var(--color-primary) !important; color: var(--color-on-primary) !important; }
+
+/* Ring color mapping (Tailwind uses --tw-ring-color) */
+.ring-blue-300 { --tw-ring-color: color-mix(in srgb, var(--color-primary) 80%, transparent); }
+.ring-2 { box-shadow: 0 0 0 2px var(--tw-ring-color, rgba(0,0,0,0)); }
 
