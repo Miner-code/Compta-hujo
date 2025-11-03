@@ -26,6 +26,15 @@ body {
   --color-muted: #6b7280; /* gray-500 */
   --radius: 12px;
 }
+/* dark theme overrides */
+.dark {
+  --color-bg: #0b1220;
+  --color-surface: #071129;
+  --color-primary: #06b6d4;
+  --color-accent: #7c3aed;
+  --color-muted: #9ca3af;
+  color: #e6eef6;
+}
 
 /* Card */
 .card {

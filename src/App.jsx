@@ -89,18 +89,32 @@ function InnerApp() {
   // categories (persisted)
   const [categories, setCategories] = useState(() => {
     const raw = loadState(STORAGE_KEY + ':categories')
-    return Array.isArray(raw) && raw.length ? raw : ['Rent','Groceries','Transport','Utilities','Entertainment','Subscriptions','Other']
+    // normalize older array-of-strings into objects { name, color, icon }
+    const defaultNames = ['Rent','Groceries','Transport','Utilities','Entertainment','Subscriptions','Other']
+    const palette = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316']
+    if (Array.isArray(raw) && raw.length) {
+      return raw.map((r, idx) => {
+        if (typeof r === 'string') return { name: r, color: palette[idx % palette.length], icon: null }
+        // already object
+        return { name: r.name || String(r).trim(), color: r.color || palette[idx % palette.length], icon: r.icon || null }
+      })
+    }
+    return defaultNames.map((n, idx) => ({ name: n, color: palette[idx % palette.length], icon: null }))
   })
 
-  // normalize and persist categories. addCategory enforces trimming and case-insensitive uniqueness.
+  // categories are objects { name, color, icon }
   const addCategory = (c) => {
-    const name = String(c || '').trim()
-    if (!name) return
+    // accept either a string or an object
+    let cat = c
+    if (typeof c === 'string') cat = { name: String(c).trim(), color: null, icon: null }
+    if (!cat || !cat.name) return
     setCategories(cs => {
       const base = Array.isArray(cs) ? cs : []
-      // avoid case-insensitive duplicates
-      if (base.find(x => x.toLowerCase() === name.toLowerCase())) return base
-      return [...base, name]
+      if (base.find(x => x.name.toLowerCase() === cat.name.toLowerCase())) return base
+      // assign default color if missing
+      const palette = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316']
+      const filled = { name: cat.name, color: cat.color || palette[base.length % palette.length], icon: cat.icon || null }
+      return [...base, filled]
     })
   }
 
@@ -114,7 +128,7 @@ function InnerApp() {
 
   const renameCategory = (oldName, newName) => {
     if (!oldName || !newName || oldName === newName) return
-    setCategories(cs => cs.map(c => (c === oldName ? newName : c)))
+    setCategories(cs => cs.map(c => (c && c.name === oldName ? { ...c, name: newName } : c)))
     // update existing entries in main state
     setState(s => ({
       ...s,
@@ -136,7 +150,7 @@ function InnerApp() {
 
   const deleteCategory = (oldName, replacement) => {
     if (!oldName) return
-    setCategories(cs => (cs || []).filter(c => c !== oldName))
+    setCategories(cs => (cs || []).filter(c => c && c.name !== oldName))
     if (replacement) {
       // replace in state entries
       setState(s => ({
@@ -179,6 +193,7 @@ function InnerApp() {
       salary: Number(raw.salary || 0),
       initialBalance: Number(raw.initialBalance || 0),
       risk: raw.risk || 'moderate',
+      theme: raw.theme || 'light',
       expenses: Array.isArray(raw.expenses) ? raw.expenses : [], // ensure array
       incomes: Array.isArray(raw.incomes) ? raw.incomes : [] // ensure array
     }
@@ -188,9 +203,20 @@ function InnerApp() {
     saveState(STORAGE_KEY, state)
   }, [state])
 
+  // apply theme class to document root for CSS variables
+  useEffect(() => {
+    try {
+      if (typeof document !== 'undefined') {
+        if (state.theme === 'dark') document.documentElement.classList.add('dark')
+        else document.documentElement.classList.remove('dark')
+      }
+    } catch (e) { }
+  }, [state.theme])
+
   const setSalary = (salary) => setState(s => ({ ...s, salary }))
   const setInitialBalance = (initialBalance) => setState(s => ({ ...s, initialBalance }))
   const setRisk = (risk) => setState(s => ({ ...s, risk }))
+  const setTheme = (theme) => setState(s => ({ ...s, theme }))
   const addExpense = (expense) => {
     // if no date provided and user has a selected date in agenda, default to that
     const e = { ...expense }
@@ -254,7 +280,7 @@ function InnerApp() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <Header onOpenCategories={() => setShowCategoriesManager(true)} />
+      <Header onOpenCategories={() => setShowCategoriesManager(true)} theme={state.theme} setTheme={setTheme} />
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         {route === '/' && (

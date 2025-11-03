@@ -1,7 +1,8 @@
 import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { Sun, Moon } from 'lucide-react'
 
-export default function Header({ onOpenCategories }) {
+export default function Header({ onOpenCategories, theme = 'light', setTheme }) {
   const { user, logout } = useAuth()
 
   return (
@@ -24,6 +25,9 @@ export default function Header({ onOpenCategories }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <button onClick={() => { if (setTheme) setTheme(theme === 'dark' ? 'light' : 'dark') }} title="Toggle theme" className="btn btn-ghost">
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           {user && <div className="text-sm text-gray-700 hidden sm:block">{user.email}</div>}
           <button onClick={async () => { try { await logout() } catch (e) { console.error(e) } }} className="btn btn-ghost">Logout</button>
         </div>

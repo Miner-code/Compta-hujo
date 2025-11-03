@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categories = [], onAddCategory, onOpenCategoryModal }) {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState(categories && categories.length ? categories[0] : '')
+  const [category, setCategory] = useState((categories && categories.length) ? (typeof categories[0] === 'string' ? categories[0] : categories[0].name) : '')
   const [date, setDate] = useState('')
   const [recurring, setRecurring] = useState(false)
   const [recurringStart, setRecurringStart] = useState('')
@@ -46,9 +46,12 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
           <label className="text-sm text-gray-600">Category</label>
           <div className="flex gap-2">
             <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
-              {categories && categories.map(c => <option key={c}>{c}</option>)}
-            </select>
-            <CategoryCreator categories={categories} onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(c) }} onOpenCategoryModal={(cb) => onOpenCategoryModal && onOpenCategoryModal(cb)} setSelected={setCategory} />
+                {categories && categories.map(c => {
+                  const name = typeof c === 'string' ? c : c.name
+                  return <option key={name} value={name}>{name}</option>
+                })}
+              </select>
+            <CategoryCreator categories={categories} onAddCategory={(c) => { onAddCategory && onAddCategory(c); setCategory(typeof c === 'string' ? c : (c && c.name)); }} onOpenCategoryModal={(cb) => onOpenCategoryModal && onOpenCategoryModal(cb)} setSelected={setCategory} />
           </div>
         </div>
           <div>
@@ -124,8 +127,13 @@ export default function Incomes({ incomes = [], onAdd, onUpdate, onRemove, categ
         e && e.preventDefault()
         const trimmed = String(val || '').trim()
         if (!trimmed) return
-        if (categories && categories.find(x => x.toLowerCase() === trimmed.toLowerCase())) { setVal(''); setOpen(false); return }
-        onAddCategory && onAddCategory(trimmed)
+        const exists = categories && categories.find(x => {
+          const n = typeof x === 'string' ? x : x.name
+          return n && n.toLowerCase() === trimmed.toLowerCase()
+        })
+        if (exists) { setVal(''); setOpen(false); return }
+        // create object with name only; App will assign color/icon defaults
+        onAddCategory && onAddCategory({ name: trimmed })
         setVal('')
         setOpen(false)
       }
