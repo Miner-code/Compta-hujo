@@ -77,7 +77,7 @@ export default function Expenses({ expenses = [], onAdd, onUpdate, onRemove, cat
   }
 
   return (
-    <div className="mt-4 bg-white p-4 rounded shadow-sm">
+    <div className="mt-4 glass-card p-4">
   <h2 className="text-lg font-medium mb-2">Expenses</h2>
       <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
         <div className="md:col-span-1">

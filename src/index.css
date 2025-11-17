@@ -6,10 +6,24 @@ html, body, #root {
   height: 100%;
 }
 
+/* Use theme token for body background (remove cinematic/animated backgrounds) */
 body {
+  /* neutral background from design tokens */
   background: var(--color-bg);
   color: var(--color-on-bg, #0f172a);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+:root{
+  --glass-bg: rgba(255,255,255,0.6);
+  --glass-border: rgba(255,255,255,0.4);
+  --glass-shadow: 0 8px 30px rgba(2,6,23,0.08);
+}
+.dark :root{
+  --glass-bg: rgba(10,18,30,0.36);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-shadow: 0 8px 30px rgba(2,6,23,0.6);
 }
 
 /* container tweaks */
@@ -122,4 +136,220 @@ body {
 /* Ring color mapping (Tailwind uses --tw-ring-color) */
 .ring-blue-300 { --tw-ring-color: color-mix(in srgb, var(--color-primary) 80%, transparent); }
 .ring-2 { box-shadow: 0 0 0 2px var(--tw-ring-color, rgba(0,0,0,0)); }
+
+/* Glassmorphism utilities */
+:root{
+  --glass-bg: rgba(255,255,255,0.6);
+  --glass-border: rgba(255,255,255,0.4);
+  --glass-shadow: 0 8px 30px rgba(2,6,23,0.08);
+}
+.dark :root{
+  --glass-bg: rgba(10,18,30,0.36);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-shadow: 0 8px 30px rgba(2,6,23,0.6);
+}
+
+.glass-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.6));
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow: 0 6px 24px rgba(15,23,42,0.06);
+  border-radius: 16px;
+  color: var(--color-on-surface);
+}
+.glass-strong {
+  background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,255,255,0.7));
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  border: 1px solid rgba(255,255,255,0.64);
+  box-shadow: 0 12px 40px rgba(2,6,23,0.12);
+  border-radius: 18px;
+}
+
+.glass-strong {
+  background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.6));
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 12px 40px rgba(2,6,23,0.12);
+}
+
+/* Reduce blur for users who prefer reduced motion / transparency */
+@media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+  .glass-card, .glass-strong { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 6px 18px rgba(2,6,23,0.06); border: 1px solid var(--color-border); background: var(--color-surface); }
+}
+
+/* Small helper to show subtle glass background for large containers */
+.glass-bg { background: linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.22)); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-radius: calc(var(--radius) - 2px); border: 1px solid rgba(255,255,255,0.2); }
+
+/* Apple-like theme preset */
+[data-theme="apple"] {
+  --color-bg: linear-gradient(180deg, #f8fafc, #ffffff);
+  --color-surface: rgba(255,255,255,0.92);
+  --color-primary: #0071e3; /* slightly Apple blue */
+  --color-on-surface: #0b1220;
+  --color-muted: #6b7280;
+  --color-border: rgba(15,23,42,0.06);
+  --glass-bg: rgba(255,255,255,0.9);
+  --glass-border: rgba(0,0,0,0.06);
+  --glass-shadow: 0 10px 30px rgba(2,6,23,0.06);
+}
+
+/* small utility: apple-logo */
+.apple-logo {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-size: 1.05rem;
+}
+
+/* Buttons Apple-like */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .9rem;
+  border-radius: 12px;
+  font-weight: 600;
+  border: 0;
+  cursor: pointer;
+}
+.btn-primary { background: linear-gradient(180deg,var(--color-primary), color-mix(in srgb, var(--color-primary) 85%, black 8%)); color: var(--color-on-primary); box-shadow: 0 6px 18px rgba(2,6,23,0.08); }
+.btn-ghost { background: transparent; color: var(--color-muted); border: 1px solid rgba(15,23,42,0.04); }
+.btn-soft { background: rgba(6,182,212,0.08); color: var(--color-primary); }
+
+/* Mobile optimizations: reduce blur/saturation/shadows to improve performance on small devices */
+@media (max-width: 640px) {
+  .glass-card, .glass-strong, .glass-bg {
+    /* much lighter blur for mobile */
+    backdrop-filter: blur(2px) saturate(110%);
+    -webkit-backdrop-filter: blur(2px) saturate(110%);
+    /* stronger (more opaque) surface to improve contrast and reduce GPU cost */
+    background: rgba(255,255,255,0.86) !important;
+    border: 1px solid rgba(15,23,42,0.06) !important;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.06) !important;
+    /* slightly smaller radius */
+    border-radius: calc(var(--radius) - 4px) !important;
+  }
+
+  /* Dark theme mobile tweaks */
+  .dark .glass-card, [data-theme="glass-dark"] .glass-card, [data-theme="glass-dark"] .glass-bg {
+    background: rgba(10,18,30,0.72) !important;
+    border: 1px solid rgba(255,255,255,0.04) !important;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.5) !important;
+  }
+
+  /* Reduce strong glass blur too */
+  .glass-strong { backdrop-filter: blur(4px) saturate(115%); -webkit-backdrop-filter: blur(4px) saturate(115%); }
+
+  /* Avoid heavy gradient backgrounds on mobile lists and selects */
+  select, input, .btn { background-clip: padding-box; }
+}
+
+/* Decorative background blobs for richer glassmorphism (inspired by Freepik glassmorphism backgrounds) */
+/* Decorative blobs disabled to keep background neutral */
+body::before,
+body::after {
+  display: none !important;
+}
+
+/* Subtle slow drifting animation to mimic organic background. Disabled when user prefers reduced motion. */
+/* Animations and floating blobs removed */
+
+/* Dark theme adjustments: make blobs cooler/darker */
+[data-theme="glass-dark"]::before {
+  background: radial-gradient(circle at 20% 25%, rgba(124,58,237,0.14) 0%, rgba(124,58,237,0.08) 30%, rgba(124,58,237,0.03) 50%, transparent 70%);
+  filter: blur(60px) saturate(100%);
+  opacity: 0.6;
+}
+
+[data-theme="glass-dark"]::after {
+  background: radial-gradient(circle at 75% 75%, rgba(6,182,212,0.12) 0%, rgba(16,185,129,0.06) 30%, transparent 70%);
+  filter: blur(60px) saturate(100%);
+  opacity: 0.6;
+}
+
+/* Mobile: tone down the blobs and blur for performance */
+@media (max-width: 640px) {
+  body::before, body::after { filter: blur(30px) saturate(110%); opacity: 0.7; }
+  body::before { width: 80vw; height: 40vh; top: -10vh; left: -20vw; }
+  body::after { width: 70vw; height: 40vh; right: -20vw; bottom: -8vh; }
+}
+
+/* Background film/video / svg fallback styling */
+/* Background film disabled */
+.background-film-root,
+.background-film-video,
+.background-film-fallback,
+.background-film-svg,
+.background-film-overlay { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* no-op: background film already disabled */
+}
+
+/* Theme presets mapped to [data-theme] on the document root */
+/* Glass - Light */
+[data-theme="glass-light"] {
+  --color-bg: #f5f8fb;
+  --color-surface: rgba(255,255,255,0.9);
+  --color-primary: #0f766e;
+  --color-on-surface: #071129;
+  --color-muted: #6b7280;
+  --glass-bg: rgba(255,255,255,0.6);
+  --glass-border: rgba(255,255,255,0.5);
+  --glass-shadow: 0 10px 30px rgba(2,6,23,0.06);
+}
+
+/* Glass - Aurora (soft colorful) */
+[data-theme="glass-aurora"] {
+  --color-bg: #f3f6ff;
+  --color-surface: rgba(255,255,255,0.88);
+  --color-primary: #7c3aed;
+  --color-on-surface: #071129;
+  --color-muted: #657083;
+  --glass-bg: rgba(255,255,255,0.56);
+  --glass-border: rgba(124,58,237,0.14);
+  --glass-shadow: 0 12px 36px rgba(124,58,237,0.06);
+}
+
+/* Glass - Dark */
+[data-theme="glass-dark"] {
+  --color-bg: #071029;
+  --color-surface: rgba(8,16,28,0.6);
+  --color-primary: #06b6d4;
+  --color-on-surface: #e6eef6;
+  --color-muted: #9aa6b2;
+  --glass-bg: rgba(10,18,30,0.44);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-shadow: 0 12px 40px rgba(2,6,23,0.6);
+}
+
+/* Classic fallback theme */
+[data-theme="classic"] {
+  /* fallback to existing tokens (no glass) */
+}
+
+/* Pro - Modern Product theme (neutral + indigo primary, warm orange accent) */
+[data-theme="pro"] {
+  --color-bg: #f7fafc; /* very light neutral */
+  --color-surface: #ffffff;
+  --color-primary: #4f46e5; /* indigo-600 */
+  --color-accent: #fb923c; /* orange-400 */
+  --color-on-primary: #ffffff;
+  --color-on-surface: #091126;
+  --color-muted: #475569;
+  --color-border: rgba(15,23,42,0.06);
+  --color-surface-soft: #f3f4f6;
+  --glass-bg: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.82));
+  --glass-border: rgba(79,70,229,0.08);
+  --glass-shadow: 0 14px 40px rgba(79,70,229,0.06);
+}
+
+/* Small pro-specific UI tweaks */
+[data-theme="pro"] .apple-logo { font-weight:700; font-size:1.05rem; color:var(--color-primary) }
+[data-theme="pro"] .btn-primary { border-radius: 10px; padding: .55rem .95rem; box-shadow: 0 8px 26px rgba(79,70,229,0.08); transition: transform .12s ease, box-shadow .12s ease; }
+[data-theme="pro"] .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 40px rgba(79,70,229,0.12); }
+[data-theme="pro"] .glass-card { border-radius: 14px; }
+
 

@@ -199,7 +199,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
   })()
 
   return (
-    <div className="bg-white p-4 rounded shadow-sm">
+    <div className="glass-card p-4">
       <h2 className="text-lg font-medium mb-2">Dashboard</h2>
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
@@ -260,7 +260,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
           </label>
         </div>
 
-        <div className="mt-4 bg-white p-4 rounded shadow-sm">
+  <div className="mt-4 glass-card p-4">
           <h3 className="font-medium mb-2">Top cryptos (24h)</h3>
           <div className="flex gap-2 items-center mb-3">
             <button className="bg-indigo-600 text-white px-3 py-1 rounded" onClick={async () => {
@@ -301,7 +301,7 @@ export default function Dashboard({ salary = 0, expenses = [], incomes = [], ini
         </div>
 
     {/* Single ergonomic investment block */}
-      <div className="mt-6 bg-white p-4 rounded shadow-sm">
+  <div className="mt-6 glass-card p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <h3 className="text-lg font-semibold">Allocation & investment suggestions</h3>

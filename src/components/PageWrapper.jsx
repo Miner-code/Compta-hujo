@@ -8,7 +8,7 @@ export default function PageWrapper({ children, className = '' }) {
   }, [])
 
   return (
-    <div className={"transition-opacity duration-300 ease-out " + className} style={{ opacity: visible ? 1 : 0 }}>
+    <div className={"transition-opacity duration-300 ease-out " + className + " glass-bg"} style={{ opacity: visible ? 1 : 0 }}>
       {children}
     </div>
   )

@@ -219,7 +219,10 @@ function InnerApp() {
   useEffect(() => {
     try {
       if (typeof document !== 'undefined') {
-        if (state.theme === 'dark') document.documentElement.classList.add('dark')
+        // expose theme via data-theme for CSS presets
+        document.documentElement.setAttribute('data-theme', state.theme || '')
+        // legacy: keep dark class for existing overrides when theme contains 'dark'
+        if ((state.theme || '').includes('dark')) document.documentElement.classList.add('dark')
         else document.documentElement.classList.remove('dark')
       }
     } catch (e) { }
@@ -280,59 +283,62 @@ function InnerApp() {
 
   return (
     <div className="min-h-screen">
+  {/* decorative cinematic background removed - using neutral page background */}
       <Header onOpenCategories={() => setShowCategoriesManager(true)} theme={state.theme} setTheme={setTheme} />
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        {route === '/' && (
-          <HomePage />
-        )}
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        <div className="space-y-8 glass-card p-6">
+          {route === '/' && (
+            <HomePage />
+          )}
 
-        {route === '/dashboard' && (
-          <div>
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="md:col-span-1">
-                <InitialBalanceInput initialBalance={state.initialBalance} onSave={setInitialBalance} />
-                <SalaryInput salary={state.salary} onSave={setSalary} />
-              </div>
-              <div className="md:col-span-2">
-                <Dashboard salary={state.salary} initialBalance={state.initialBalance} expenses={state.expenses} incomes={state.incomes} risk={state.risk} setRisk={setRisk} />
-              </div>
-            </section>
-            <section>
-              <Agenda
-                expenses={state.expenses}
-                incomes={state.incomes}
-                viewYear={agendaView.year}
-                viewMonth={agendaView.month}
-                selectedDate={agendaView.selectedDate}
-                onMonthChange={handleAgendaMonthChange}
-                onDateSelect={handleAgendaDateSelect}
-              />
-            </section>
-          </div>
-        )}
+          {route === '/dashboard' && (
+            <div>
+              <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="md:col-span-1">
+                  <InitialBalanceInput initialBalance={state.initialBalance} onSave={setInitialBalance} />
+                  <SalaryInput salary={state.salary} onSave={setSalary} />
+                </div>
+                <div className="md:col-span-2">
+                  <Dashboard salary={state.salary} initialBalance={state.initialBalance} expenses={state.expenses} incomes={state.incomes} risk={state.risk} setRisk={setRisk} />
+                </div>
+              </section>
+              <section>
+                <Agenda
+                  expenses={state.expenses}
+                  incomes={state.incomes}
+                  viewYear={agendaView.year}
+                  viewMonth={agendaView.month}
+                  selectedDate={agendaView.selectedDate}
+                  onMonthChange={handleAgendaMonthChange}
+                  onDateSelect={handleAgendaDateSelect}
+                />
+              </section>
+            </div>
+          )}
 
-        {route === '/transactions' && (
-          <TransactionsPage
-            categories={categories}
-            addCategory={addCategory}
-            onOpenCategoryModal={openCategoryModal}
-            incomes={state.incomes}
-            expenses={state.expenses}
-            onAddIncome={addIncome}
-            onUpdateIncome={updateIncome}
-            onRemoveIncome={removeIncome}
-            onAddExpense={addExpense}
-            onUpdateExpense={updateExpense}
-            onRemoveExpense={removeExpense}
-          />
-        )}
+          {route === '/transactions' && (
+            <TransactionsPage
+              categories={categories}
+              addCategory={addCategory}
+              onOpenCategoryModal={openCategoryModal}
+              incomes={state.incomes}
+              expenses={state.expenses}
+              onAddIncome={addIncome}
+              onUpdateIncome={updateIncome}
+              onRemoveIncome={removeIncome}
+              onAddExpense={addExpense}
+              onUpdateExpense={updateExpense}
+              onRemoveExpense={removeExpense}
+            />
+          )}
 
-        {route === '/invest' && (
-          <InvestPage savings={totals.savings || 0} risk={state.risk} setRisk={setRisk} />
-        )}
+          {route === '/invest' && (
+            <InvestPage savings={totals.savings || 0} risk={state.risk} setRisk={setRisk} />
+          )}
 
-        <footer className="text-center text-sm text-gray-500">Data is stored locally in your browser. Protect your device to keep your data safe.</footer>
+          <footer className="text-center text-sm text-gray-500">Data is stored locally in your browser. Protect your device to keep your data safe.</footer>
+        </div>
       </main>
       {showCategoriesManager && (
         <CategoriesManager

@@ -10,7 +10,7 @@ export default function InitialBalanceInput({ initialBalance, onSave }) {
   }
 
   return (
-    <form onSubmit={handleSave} className="mb-4 card p-4">
+    <form onSubmit={handleSave} className="mb-4 glass-card p-4">
       <label className="block text-sm font-medium text-gray-700">Current account balance</label>
       <div className="mt-3 flex gap-2">
         <input

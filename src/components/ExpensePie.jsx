@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
+import ChartPopup from './ChartPopup'
 
 // Simple SVG pie chart to avoid external deps
 export default function ExpensePie({ expenses = [], incomes = [], salary = 0 }) {
+  const [showPopup, setShowPopup] = useState(false)
   const expenseMap = new Map()
   let totalExpenses = 0
   for (const e of expenses) {
@@ -68,6 +70,32 @@ export default function ExpensePie({ expenses = [], incomes = [], salary = 0 }) 
           </ul>
         </div>
       </div>
+      <div className="mt-4 flex gap-2">
+        <button className="px-3 py-2 bg-blue-600 text-white rounded" onClick={() => setShowPopup(true)}>Ouvrir histogramme</button>
+        <button className="px-3 py-2 bg-gray-100 rounded" onClick={() => {
+          const headers = ['label','value']
+          const rows = arcs.map(a => [a.label, a.value])
+          const csv = [headers.join(',')].concat(rows.map(r => r.map(v => {
+            const s = String(v == null ? '' : v)
+            if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g,'""') + '"'
+            return s
+          }).join(','))).join('\n')
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          const now = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')
+          a.download = `compta-breakdown-${now}.csv`
+          document.body.appendChild(a)
+          a.click()
+          a.remove()
+          URL.revokeObjectURL(url)
+        }}>Exporter CSV</button>
+      </div>
+
+      {/* Chart popup modal */}
+      {showPopup && <ChartPopup expenses={expenses} incomes={incomes} salary={salary} onClose={() => setShowPopup(false)} />}
     </div>
   )
 }
+
