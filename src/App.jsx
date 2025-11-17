@@ -125,7 +125,7 @@ function InnerApp() {
   }
 
   useEffect(() => {
-    saveState(STORAGE_KEY + ':categories', categories)
+    saveState(buildKey('categories'), categories)
   }, [categories])
 
   // categories manager modal
@@ -240,17 +240,19 @@ function InnerApp() {
       // load main state for this user (if any)
       const saved = loadState(buildKey())
       if (saved) {
+        // restrict theme to either 'light' or 'dark'
+        const themeValue = (saved.theme === 'dark') ? 'dark' : 'light'
         setState(() => ({
           salary: Number(saved.salary || 0),
           initialBalance: Number(saved.initialBalance || 0),
           risk: saved.risk || 'moderate',
-          theme: saved.theme || 'glass-light',
+          theme: themeValue,
           expenses: Array.isArray(saved.expenses) ? saved.expenses : [],
           incomes: Array.isArray(saved.incomes) ? saved.incomes : []
         }))
       } else {
         // initialize to empty financial lists when no saved data for this user
-        setState(s => ({ ...s, expenses: [], incomes: [], theme: s.theme || 'glass-light' }))
+        setState(s => ({ ...s, expenses: [], incomes: [], theme: s.theme || 'light' }))
       }
 
       // load monthly buckets and categories (if any)

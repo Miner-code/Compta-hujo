@@ -29,7 +29,7 @@ export default function Header({ onOpenCategories, theme = 'light', setTheme }) 
 
         <div className="flex items-center gap-3">
           <ThemeSelector theme={theme} setTheme={setTheme} />
-          <button onClick={() => { if (setTheme) setTheme(theme === 'dark' ? 'glass-light' : 'dark') }} title="Toggle theme" className="btn btn-ghost" aria-pressed={theme === 'dark'}>
+          <button onClick={() => { if (setTheme) setTheme(theme === 'dark' ? 'light' : 'dark') }} title="Basculer thème" className="btn btn-ghost" aria-pressed={theme === 'dark'}>
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           {user && <div className="text-sm muted hidden sm:block">{user.email}</div>}
