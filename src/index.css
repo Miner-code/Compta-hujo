@@ -20,11 +20,7 @@ body {
   --glass-border: rgba(255,255,255,0.4);
   --glass-shadow: 0 8px 30px rgba(2,6,23,0.08);
 }
-.dark :root{
-  --glass-bg: rgba(10,18,30,0.36);
-  --glass-border: rgba(255,255,255,0.06);
-  --glass-shadow: 0 8px 30px rgba(2,6,23,0.6);
-}
+
 
 /* container tweaks */
 .max-w-5xl { max-width: 78rem; }
@@ -70,6 +66,11 @@ body {
   --bg-blob-bottom: radial-gradient(circle at 75% 75%, rgba(6,182,212,0.06) 0%, rgba(16,185,129,0.03) 30%, transparent 70%);
   --bg-overlay: rgba(6,10,18,0.54);
   --bg-video-opacity: 0.45;
+
+  /* improved glass tokens for dark mode (higher contrast, more opaque) */
+  --glass-bg: rgba(10,18,30,0.64);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-shadow: 0 8px 30px rgba(2,6,23,0.55);
 }
 
 /* Card */
@@ -79,20 +80,71 @@ body {
   box-shadow: 0 6px 20px rgba(15,23,42,0.06);
 }
 
-/* Buttons */
+/* Buttons - unified styles for light & dark */
+:root{
+  /* button token fallbacks */
+  --btn-bg: var(--color-surface);
+  --btn-fg: var(--color-on-surface);
+  --btn-border: transparent;
+  --btn-radius: 10px;
+  --btn-padding: .5rem .9rem;
+}
+.dark {
+  --btn-bg: rgba(8,14,22,0.6);
+  --btn-fg: var(--color-on-surface);
+  --btn-border: rgba(255,255,255,0.06);
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
   gap: .5rem;
-  padding: .5rem .9rem;
-  border-radius: 10px;
+  padding: var(--btn-padding);
+  border-radius: var(--btn-radius);
   font-weight: 600;
-  border: 0;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
 }
-.btn-primary { background: var(--color-primary); color: white; }
-.btn-ghost { background: transparent; color: var(--color-muted); border: 1px solid rgba(15,23,42,0.06); }
-.btn-soft { background: #eefbf9; color: var(--color-primary); }
+
+.btn:focus {
+  outline: none;
+}
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 85%, black 8%));
+  color: var(--color-on-primary);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.08);
+}
+.dark .btn-primary {
+  box-shadow: 0 6px 18px rgba(2,6,23,0.28);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+.dark .btn-ghost { color: var(--color-on-surface); border-color: rgba(255,255,255,0.06); }
+
+.btn-soft {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+  border-color: transparent;
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; transform: none; }
+}
 
 /* Inputs */
 .input-base { padding: .6rem .8rem; border-radius: 8px; border: 1px solid #e6e9ef; width:100%; }
@@ -148,11 +200,7 @@ body {
   --glass-border: rgba(255,255,255,0.4);
   --glass-shadow: 0 8px 30px rgba(2,6,23,0.08);
 }
-.dark :root{
-  --glass-bg: rgba(10,18,30,0.36);
-  --glass-border: rgba(255,255,255,0.06);
-  --glass-shadow: 0 8px 30px rgba(2,6,23,0.6);
-}
+
 
 .glass-card {
   background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.6));
@@ -180,6 +228,25 @@ body {
   box-shadow: 0 12px 40px rgba(2,6,23,0.12);
 }
 
+/* Dark-mode explicit glass overrides: ensure readable surfaces and clear separation */
+.dark .glass-card,
+.dark .glass-strong,
+.dark .glass-bg {
+  background: linear-gradient(180deg, rgba(6,12,22,0.72), rgba(8,14,24,0.64));
+  backdrop-filter: blur(8px) saturate(110%);
+  -webkit-backdrop-filter: blur(8px) saturate(110%);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 28px rgba(2,6,23,0.52);
+  color: var(--color-on-surface);
+}
+
+/* Make borders on inputs and subtle surfaces more visible in dark mode */
+.dark .input-base { border: 1px solid rgba(255,255,255,0.06); background: rgba(6,12,22,0.44); color: var(--color-on-surface); }
+.dark .btn-ghost { border: 1px solid rgba(255,255,255,0.06); color: var(--color-on-surface); }
+
+/* Tweak blob opacity and mix for better legibility in dark mode */
+.dark body::before, .dark body::after { opacity: 0.48; filter: blur(64px) saturate(100%); }
+
 /* Reduce blur for users who prefer reduced motion / transparency */
 @media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
   .glass-card, .glass-strong { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 6px 18px rgba(2,6,23,0.06); border: 1px solid var(--color-border); background: var(--color-surface); }
@@ -196,20 +263,7 @@ body {
   font-size: 1.05rem;
 }
 
-/* Buttons Apple-like */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .5rem .9rem;
-  border-radius: 12px;
-  font-weight: 600;
-  border: 0;
-  cursor: pointer;
-}
-.btn-primary { background: linear-gradient(180deg,var(--color-primary), color-mix(in srgb, var(--color-primary) 85%, black 8%)); color: var(--color-on-primary); box-shadow: 0 6px 18px rgba(2,6,23,0.08); }
-.btn-ghost { background: transparent; color: var(--color-muted); border: 1px solid rgba(15,23,42,0.04); }
-.btn-soft { background: rgba(6,182,212,0.08); color: var(--color-primary); }
+/* (old 'Apple-like' duplicates removed - consolidated above) */
 
 /* Mobile optimizations: reduce blur/saturation/shadows to improve performance on small devices */
 @media (max-width: 640px) {
