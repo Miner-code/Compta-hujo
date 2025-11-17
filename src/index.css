@@ -246,15 +246,47 @@ body {
   select, input, .btn { background-clip: padding-box; }
 }
 
-/* Decorative background blobs for richer glassmorphism (inspired by Freepik glassmorphism backgrounds) */
-/* Decorative blobs disabled to keep background neutral */
+/* Decorative background blobs for richer glassmorphism (inspired by Freepik) */
 body::before,
 body::after {
-  display: none !important;
+  content: '';
+  position: fixed;
+  z-index: -2;
+  pointer-events: none;
+  transition: opacity 420ms ease, transform 420ms ease, filter 420ms ease, background 420ms ease;
+}
+
+body::before {
+  /* top-left warm blob */
+  top: -12vh;
+  left: -8vw;
+  width: 62vw;
+  height: 60vh;
+  background: var(--bg-blob-top, radial-gradient(circle at 20% 25%, rgba(124,58,237,0.28) 0%, rgba(124,58,237,0.14) 30%, rgba(124,58,237,0.06) 50%, transparent 70%));
+  filter: blur(72px) saturate(120%);
+  transform: translateZ(0) translate(-6%, 0) rotate(-10deg);
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+body::after {
+  /* bottom-right cyan blob */
+  right: -8vw;
+  bottom: -8vh;
+  width: 56vw;
+  height: 56vh;
+  background: var(--bg-blob-bottom, radial-gradient(circle at 75% 75%, rgba(6,182,212,0.22) 0%, rgba(16,185,129,0.10) 30%, rgba(16,185,129,0.04) 50%, transparent 70%));
+  filter: blur(72px) saturate(120%);
+  transform: translateZ(0) translate(6%, 0) rotate(8deg);
+  opacity: 0.85;
+  mix-blend-mode: screen;
 }
 
 /* Subtle slow drifting animation to mimic organic background. Disabled when user prefers reduced motion. */
-/* Animations and floating blobs removed */
+@media (prefers-reduced-motion: no-preference) {
+  body::before { animation: blob-move-1 18s linear infinite; }
+  body::after { animation: blob-move-2 24s linear infinite; }
+}
 
 /* Dark theme adjustments: make blobs cooler/darker */
 [data-theme="glass-dark"]::before {
@@ -277,15 +309,15 @@ body::after {
 }
 
 /* Background film/video / svg fallback styling */
-/* Background film disabled */
-.background-film-root,
-.background-film-video,
-.background-film-fallback,
-.background-film-svg,
-.background-film-overlay { display: none !important; }
+.background-film-root { position: fixed; inset: 0; z-index: -9999; overflow: hidden; pointer-events: none; }
+.background-film-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: var(--bg-video-opacity,0.95); filter: saturate(1.03) contrast(1.02); transition: opacity 420ms ease, filter 420ms ease; }
+.background-film-fallback { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.background-film-svg { width: 120%; height: 120%; opacity: 0.36; transition: opacity 420ms ease, transform 420ms ease; }
+.background-film-overlay { position: absolute; inset: 0; mix-blend-mode: overlay; background: var(--bg-overlay, rgba(255,255,255,0.08)); transition: background 420ms ease, opacity 420ms ease; }
 
 @media (prefers-reduced-motion: reduce) {
-  /* no-op: background film already disabled */
+  .background-film-video { display: none; }
+  .background-film-svg { animation: none; }
 }
 
 /* Theme presets mapped to [data-theme] on the document root */
@@ -299,6 +331,10 @@ body::after {
   --glass-bg: rgba(255,255,255,0.6);
   --glass-border: rgba(255,255,255,0.5);
   --glass-shadow: 0 10px 30px rgba(2,6,23,0.06);
+  --bg-blob-top: radial-gradient(circle at 20% 25%, rgba(124,58,237,0.22) 0%, rgba(124,58,237,0.12) 30%, rgba(124,58,237,0.04) 50%, transparent 70%);
+  --bg-blob-bottom: radial-gradient(circle at 75% 75%, rgba(6,182,212,0.18) 0%, rgba(16,185,129,0.08) 30%, transparent 70%);
+  --bg-overlay: rgba(255,255,255,0.06);
+  --bg-video-opacity: 1;
 }
 
 /* Glass - Aurora (soft colorful) */
@@ -311,6 +347,10 @@ body::after {
   --glass-bg: rgba(255,255,255,0.56);
   --glass-border: rgba(124,58,237,0.14);
   --glass-shadow: 0 12px 36px rgba(124,58,237,0.06);
+  --bg-blob-top: radial-gradient(circle at 20% 25%, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.09) 30%, rgba(124,58,237,0.03) 50%, transparent 70%);
+  --bg-blob-bottom: radial-gradient(circle at 75% 75%, rgba(124,58,237,0.12) 0%, rgba(6,182,212,0.12) 30%, transparent 70%);
+  --bg-overlay: rgba(255,255,255,0.06);
+  --bg-video-opacity: 0.98;
 }
 
 /* Glass - Dark */
@@ -323,6 +363,10 @@ body::after {
   --glass-bg: rgba(10,18,30,0.44);
   --glass-border: rgba(255,255,255,0.06);
   --glass-shadow: 0 12px 40px rgba(2,6,23,0.6);
+  --bg-blob-top: radial-gradient(circle at 20% 25%, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.04) 30%, transparent 70%);
+  --bg-blob-bottom: radial-gradient(circle at 75% 75%, rgba(6,182,212,0.06) 0%, rgba(16,185,129,0.03) 30%, transparent 70%);
+  --bg-overlay: rgba(6,10,18,0.54);
+  --bg-video-opacity: 0.45;
 }
 
 /* Classic fallback theme */
@@ -344,6 +388,10 @@ body::after {
   --glass-bg: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.82));
   --glass-border: rgba(79,70,229,0.08);
   --glass-shadow: 0 14px 40px rgba(79,70,229,0.06);
+  --bg-blob-top: radial-gradient(circle at 20% 25%, rgba(79,70,229,0.16) 0%, rgba(79,70,229,0.08) 30%, transparent 70%);
+  --bg-blob-bottom: radial-gradient(circle at 75% 75%, rgba(251,146,60,0.14) 0%, rgba(251,146,60,0.06) 30%, transparent 70%);
+  --bg-overlay: rgba(255,255,255,0.06);
+  --bg-video-opacity: 1;
 }
 
 /* Small pro-specific UI tweaks */
