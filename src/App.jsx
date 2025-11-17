@@ -69,7 +69,7 @@ function InnerApp() {
 
     // after persisting, load new month's items and set selectedDate to null
     setTimeout(() => {
-      const m = loadState(STORAGE_KEY + ':monthly') || { expenses: {}, incomes: {} }
+      const m = loadState(buildKey('monthly')) || { expenses: {}, incomes: {} }
       const newExpenses = (m.expenses && m.expenses[newKey]) ? m.expenses[newKey] : []
       const newIncomes = (m.incomes && m.incomes[newKey]) ? m.incomes[newKey] : []
       setState(s => ({ ...s, expenses: [ ...(s.expenses.filter(e => e.recurring)), ...newExpenses ], incomes: [ ...(s.incomes.filter(i => i.recurring)), ...newIncomes ] }))
@@ -80,15 +80,21 @@ function InnerApp() {
     setAgendaView(v => ({ ...v, selectedDate: dateKey }))
   }
 
+  // helper to build per-user storage key (namespaced by uid when logged in)
+  const buildKey = (suffix) => {
+    const uidPart = user && user.uid ? `:${user.uid}` : ':public'
+    return `${STORAGE_KEY}${uidPart}${suffix ? `:${suffix}` : ''}`
+  }
+
   // monthly storage for non-recurring items per YYYY-MM
   const [monthly, setMonthly] = useState(() => {
-    const raw = loadState(STORAGE_KEY + ':monthly') || {}
+    const raw = loadState(buildKey('monthly')) || {}
     return raw && raw.expenses && raw.incomes ? raw : { expenses: {}, incomes: {} }
   })
 
   // categories (persisted)
   const [categories, setCategories] = useState(() => {
-    const raw = loadState(STORAGE_KEY + ':categories')
+    const raw = loadState(buildKey('categories'))
     // normalize older array-of-strings into objects { name, color, icon }
     const defaultNames = ['Rent','Groceries','Transport','Utilities','Entertainment','Subscriptions','Other']
     const palette = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316']
@@ -172,7 +178,7 @@ function InnerApp() {
   }
 
   useEffect(() => {
-    saveState(STORAGE_KEY + ':monthly', monthly)
+    saveState(buildKey('monthly'), monthly)
   }, [monthly])
 
   // simple hash-based route state ("/", "/dashboard", "/transactions", "/invest")
@@ -212,7 +218,7 @@ function InnerApp() {
   })
 
   useEffect(() => {
-    saveState(STORAGE_KEY, state)
+    saveState(buildKey(), state)
   }, [state])
 
   // apply theme class to document root for CSS variables
@@ -227,6 +233,35 @@ function InnerApp() {
       }
     } catch (e) { }
   }, [state.theme])
+
+  // When the authenticated user changes, (re)load that user's saved data from localStorage
+  useEffect(() => {
+    try {
+      // load main state for this user (if any)
+      const saved = loadState(buildKey())
+      if (saved) {
+        setState(() => ({
+          salary: Number(saved.salary || 0),
+          initialBalance: Number(saved.initialBalance || 0),
+          risk: saved.risk || 'moderate',
+          theme: saved.theme || 'glass-light',
+          expenses: Array.isArray(saved.expenses) ? saved.expenses : [],
+          incomes: Array.isArray(saved.incomes) ? saved.incomes : []
+        }))
+      } else {
+        // initialize to empty financial lists when no saved data for this user
+        setState(s => ({ ...s, expenses: [], incomes: [], theme: s.theme || 'glass-light' }))
+      }
+
+      // load monthly buckets and categories (if any)
+      const monthlySaved = loadState(buildKey('monthly')) || { expenses: {}, incomes: {} }
+      setMonthly(monthlySaved)
+      const cats = loadState(buildKey('categories'))
+      if (Array.isArray(cats) && cats.length) setCategories(cats)
+    } catch (err) {
+      console.error('Error loading user data', err)
+    }
+  }, [user && user.uid])
 
   const setSalary = (salary) => setState(s => ({ ...s, salary }))
   const setInitialBalance = (initialBalance) => setState(s => ({ ...s, initialBalance }))
